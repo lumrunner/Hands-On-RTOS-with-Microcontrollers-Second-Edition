@@ -65,7 +65,7 @@ void initUart4Pins( void )
  * @param DmaTx: pointer to DMA struct to use when transmitting via DMA
  * @param DmaRx: pointer to DMA struct to use when receiving via DMA
  */
-void STM_UartInit( USART_TypeDef* STM_UART_PERIPH, uint32_t Baudrate, DMA_HandleTypeDef* DmaTx, DMA_HandleTypeDef* DmaRx )
+HAL_StatusTypeDef STM_UartInit( USART_TypeDef* STM_UART_PERIPH, uint32_t Baudrate, DMA_HandleTypeDef* DmaTx, DMA_HandleTypeDef* DmaRx )
 {
 	HAL_StatusTypeDef retVal;
 	UART_HandleTypeDef uartInitStruct;
@@ -100,4 +100,6 @@ void STM_UartInit( USART_TypeDef* STM_UART_PERIPH, uint32_t Baudrate, DMA_Handle
 	// and initialize the associated handle.
 	retVal = HAL_UART_Init(&uartInitStruct);
 	assert_param(retVal == HAL_OK);
+
+	return retVal;
 }

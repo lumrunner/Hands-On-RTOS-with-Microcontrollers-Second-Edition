@@ -190,7 +190,7 @@ int _write(int file, char *ptr, int len)
 /**
  * assert_failed() is a user-defined function.
  * It is called when assert_param() evaluates to true.
- * To use this function, put the following line in Inc\stm32f7xx_hal_conf.h:
+ * To use this function, put the following line in Inc\stm32f4xx_hal_conf.h:
  *     #define USE_FULL_ASSERT 1
  */
 void assert_failed(uint8_t *file, uint32_t line)
@@ -198,8 +198,7 @@ void assert_failed(uint8_t *file, uint32_t line)
     BlueLed.On();
     RedLed.On();
     GreenLed.On();
-    printf("assert failed. Line: %lu.  File:", line);
-    printf((char *) file);
+    printf("assert failed. Line: %lu.  File: %s\r\n", line, file);
     while(1);
 }
 #endif // USE_FULL_ASSERT
