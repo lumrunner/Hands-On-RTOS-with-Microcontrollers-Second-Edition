@@ -1,6 +1,6 @@
 /*
- * FreeRTOS Kernel V10.2.1
- * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * FreeRTOS Kernel V10.3.1
+ * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -160,10 +160,6 @@ extern "C" {
 	#define INCLUDE_uxTaskGetStackHighWaterMark2 0
 #endif
 
-#ifndef INCLUDE_pxTaskGetStackStart
-	#define INCLUDE_pxTaskGetStackStart 0
-#endif
-
 #ifndef INCLUDE_eTaskGetState
 	#define INCLUDE_eTaskGetState 0
 #endif
@@ -245,8 +241,24 @@ extern "C" {
 	#define configASSERT_DEFINED 1
 #endif
 
+/* configPRECONDITION should be defined as configASSERT.
+The CBMC proofs need a way to track assumptions and assertions.
+A configPRECONDITION statement should express an implicit invariant or
+assumption made.  A configASSERT statement should express an invariant that must
+hold explicit before calling the code. */
+#ifndef configPRECONDITION
+	#define configPRECONDITION( X ) configASSERT(X)
+	#define configPRECONDITION_DEFINED 0
+#else
+	#define configPRECONDITION_DEFINED 1
+#endif
+
 #ifndef portMEMORY_BARRIER
 	#define portMEMORY_BARRIER()
+#endif
+
+#ifndef portSOFTWARE_BARRIER
+	#define portSOFTWARE_BARRIER()
 #endif
 
 /* The timers module relies on xTaskGetSchedulerState(). */
@@ -403,23 +415,6 @@ extern "C" {
 #ifndef tracePOST_MOVED_TASK_TO_READY_STATE
 	#define tracePOST_MOVED_TASK_TO_READY_STATE( pxTCB )
 #endif
-
-#ifndef traceREADDED_TASK_TO_READY_STATE
-	#define traceREADDED_TASK_TO_READY_STATE( pxTCB )	traceMOVED_TASK_TO_READY_STATE( pxTCB )
-#endif
-
-#ifndef traceMOVED_TASK_TO_DELAYED_LIST
-	#define traceMOVED_TASK_TO_DELAYED_LIST()
-#endif
-
-#ifndef traceMOVED_TASK_TO_OVERFLOW_DELAYED_LIST
-	#define traceMOVED_TASK_TO_OVERFLOW_DELAYED_LIST()
-#endif
-
-#ifndef traceMOVED_TASK_TO_SUSPENDED_LIST
-	#define traceMOVED_TASK_TO_SUSPENDED_LIST( pxTCB )
-#endif
-
 
 #ifndef traceQUEUE_CREATE
 	#define traceQUEUE_CREATE( pxNewQueue )
@@ -663,18 +658,6 @@ extern "C" {
 
 #ifndef traceTASK_NOTIFY_GIVE_FROM_ISR
 	#define traceTASK_NOTIFY_GIVE_FROM_ISR()
-#endif
-
-#ifndef traceISR_EXIT_TO_SCHEDULER
-	#define traceISR_EXIT_TO_SCHEDULER()
-#endif
-
-#ifndef traceISR_EXIT
-	#define traceISR_EXIT()
-#endif
-
-#ifndef traceISR_ENTER
-	#define traceISR_ENTER()
 #endif
 
 #ifndef traceSTREAM_BUFFER_CREATE_FAILED
@@ -970,6 +953,7 @@ V8 if desired. */
 	#define pcTimerGetTimerName pcTimerGetName
 	#define pcQueueGetQueueName pcQueueGetName
 	#define vTaskGetTaskInfo vTaskGetInfo
+	#define xTaskGetIdleRunTimeCounter ulTaskGetIdleRunTimeCounter
 
 	/* Backward compatibility within the scheduler code only - these definitions
 	are not really required but are included for completeness. */
