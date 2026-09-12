@@ -8,21 +8,23 @@ Licenses:
 
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <FreeRTOS.h>
-#include "Nucleo_F767ZI_Init.h"
-#include <Nucleo_F767ZI_GPIO.h>
-#include <main.h>
-#include <SEGGER_SYSVIEW.h>
+#include "Nucleo_F446RE_Init.h"
+#include <Nucleo_F446RE_GPIO.h>
+//#include <main.h>
 
-
+//#define CHANGE_ME 0
 
 // declarations for 'private' functions not exposed via header file
 void SystemClock_Config(void);
 static void gpioPinsInit(void);
 static void rngInit(void);
 
-UART_HandleTypeDef huart4;
-UART_HandleTypeDef uartInitStruct;
+//UART_HandleTypeDef huart4;
+//UART_HandleTypeDef uartInitStruct;
 /************************************* PUBLIC FUNCTIONS **************************/
 
 /**
@@ -46,7 +48,7 @@ void HWInit( void )
  */
 uint32_t StmRand( uint32_t Min, uint32_t Max )
 {
-    return ( (RNG->DR % ((Max-Min)+1)) + Min );
+    return ( (rand() % ((Max-Min)+1)) + Min );
 }
 
 
@@ -54,11 +56,10 @@ void SystemClock_Config(void)
 {
 	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
 	/** Configure LSE Drive Capability
 	*/
-	HAL_PWR_EnableBkUpAccess();
+	//HAL_PWR_EnableBkUpAccess();
 	/** Configure the main internal regulator output voltage
 	*/
 	__HAL_RCC_PWR_CLK_ENABLE();
@@ -70,11 +71,10 @@ void SystemClock_Config(void)
 	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
 	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
 	RCC_OscInitStruct.PLL.PLLM = 4;
-	RCC_OscInitStruct.PLL.PLLN = 216;
+	RCC_OscInitStruct.PLL.PLLN = 180;
 	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-	RCC_OscInitStruct.PLL.PLLQ = 9;
-	RCC_OscInitStruct.PLL.PLLR = 2;	//NOTE: this line was not supplied by HAL - it simply
-									//sets the struct to match MCU defaults
+	RCC_OscInitStruct.PLL.PLLQ = 2;
+	RCC_OscInitStruct.PLL.PLLR = 2;
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
 	{
 		Error_Handler();
@@ -88,23 +88,13 @@ void SystemClock_Config(void)
 	/** Initializes the CPU, AHB and APB busses clocks
 	*/
 	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-							  |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+	                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
 	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
 	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
 	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
-	{
-		Error_Handler();
-	}
-	PeriphClkInitStruct.PeriphClockSelection =	RCC_PERIPHCLK_USART3|RCC_PERIPHCLK_CLK48|
-												RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_UART4;
-	PeriphClkInitStruct.Usart2ClockSelection = RCC_USART2CLKSOURCE_SYSCLK;
-	PeriphClkInitStruct.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
-	PeriphClkInitStruct.Uart4ClockSelection = RCC_UART4CLKSOURCE_SYSCLK;
-	PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48SOURCE_PLL;
-	if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
 	{
 		Error_Handler();
 	}
@@ -127,13 +117,6 @@ static void gpioPinsInit(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(USB_PowerSwitchOn_GPIO_Port, USB_PowerSwitchOn_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : USER_Btn_Pin */
   GPIO_InitStruct.Pin = USER_Btn_Pin;
@@ -145,21 +128,27 @@ static void gpioPinsInit(void)
   GPIO_InitStruct.Pin = LD3_Pin|LD2_Pin|LD1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+  HAL_GPIO_Init(LD_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure LEDs off by default */
+  HAL_GPIO_WritePin(LD_GPIO_Port, LD3_Pin|LD2_Pin|LD1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : USB_PowerSwitchOn_Pin */
-  GPIO_InitStruct.Pin = USB_PowerSwitchOn_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(USB_PowerSwitchOn_GPIO_Port, &GPIO_InitStruct);
+  //GPIO_InitStruct.Pin = USB_PowerSwitchOn_Pin;
+  //GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  //GPIO_InitStruct.Pull = GPIO_NOPULL;
+  //GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  //HAL_GPIO_Init(USB_PowerSwitchOn_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin Output Level */
+    //HAL_GPIO_WritePin(USB_PowerSwitchOn_GPIO_Port, USB_PowerSwitchOn_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : USB_OverCurrent_Pin */
-  GPIO_InitStruct.Pin = USB_OverCurrent_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(USB_OverCurrent_GPIO_Port, &GPIO_InitStruct);
+  //GPIO_InitStruct.Pin = USB_OverCurrent_Pin;
+  //GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  //GPIO_InitStruct.Pull = GPIO_NOPULL;
+  //HAL_GPIO_Init(USB_OverCurrent_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -168,11 +157,7 @@ static void gpioPinsInit(void)
  */
 static void rngInit( void )
 {
-	//start the peripheral clock
-	__HAL_RCC_RNG_CLK_ENABLE();
-
-	//enable the random number generator
-	RNG->CR |= RNG_CR_RNGEN;
+  srand(69);
 }
 
 /**
@@ -187,6 +172,20 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
+// printf over debugger
+int _write(int file, char *ptr, int len)
+{
+  (void)file;
+  int DataIdx;
+
+  for (DataIdx = 0; DataIdx < len; DataIdx++)
+  {
+    //__io_putchar(*ptr++);
+    ITM_SendChar(*ptr++);
+  }
+  return len;
+}
+
 #ifdef  USE_FULL_ASSERT
 /**
  * assert_failed() is a user-defined function.
@@ -199,8 +198,8 @@ void assert_failed(uint8_t *file, uint32_t line)
     BlueLed.On();
     RedLed.On();
     GreenLed.On();
-    SEGGER_SYSVIEW_PrintfHost("assert failed. Line: %u.  File:", line);
-    SEGGER_SYSVIEW_PrintfHost((char *) file);
+    printf("assert failed. Line: %lu.  File:", line);
+    printf((char *) file);
     while(1);
 }
 #endif // USE_FULL_ASSERT

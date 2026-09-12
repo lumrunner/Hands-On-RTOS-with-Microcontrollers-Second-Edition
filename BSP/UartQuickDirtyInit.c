@@ -24,7 +24,7 @@
  */
 
 #include "UartQuickDirtyInit.h"
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
 
 // Initialize the pins for USART2
 void initUart2Pins( void )
@@ -91,11 +91,10 @@ void STM_UartInit( USART_TypeDef* STM_UART_PERIPH, uint32_t Baudrate, DMA_Handle
 	uartInitStruct.Init.Mode = UART_MODE_TX_RX;
 	uartInitStruct.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 	uartInitStruct.Init.OverSampling = UART_OVERSAMPLING_8;
-	uartInitStruct.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
 	// UART Rx DMA Handle parameters
 	uartInitStruct.hdmatx = DmaTx;
 	uartInitStruct.hdmarx = DmaRx;
-	uartInitStruct.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+	//uartInitStruct.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
 
 	// HAL_UART_Init : Initialize the UART mode according to the specified parameters in uartInitStruct
 	// and initialize the associated handle.

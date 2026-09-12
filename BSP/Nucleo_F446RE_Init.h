@@ -23,20 +23,21 @@
  *
  */
 
-#ifndef BSP_NUCLEO_F767ZI_INIT_H_
-#define BSP_NUCLEO_F767ZI_INIT_H_
+#ifndef BSP_NUCLEO_F446RE_INIT_H_
+#define BSP_NUCLEO_F446RE_INIT_H_
 #include <stdint.h>
 #ifdef __cplusplus
  extern "C" {
 #endif
 
-
 void HWInit( void );
 void PWMInit( void );
 uint32_t StmRand( uint32_t Max, uint32_t Min );
+
+void Error_Handler(void);
 
 #ifdef __cplusplus
  }
 #endif
 
-#endif /* BSP_NUCLEO_F767ZI_INIT_H_ */
+#endif /* BSP_NUCLEO_F446RE_INIT_H_ */
