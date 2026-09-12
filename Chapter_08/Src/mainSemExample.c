@@ -9,15 +9,15 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-
+#include <stdio.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
-#include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_GPIO.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 
 #define STACK_SIZE 128
 
@@ -30,7 +30,6 @@ SemaphoreHandle_t semPtr = NULL;
 int main(void)
 {
 	HWInit();
-	SEGGER_SYSVIEW_Conf();
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	//ensure proper priority grouping for freeRTOS
 
 	// Create a semaphore using the FreeRTOS Heap
@@ -70,7 +69,7 @@ void GreenTaskA( void* argument )
 		if(++count >= 5)
 		{
 			count = 0;
-			SEGGER_SYSVIEW_PrintfHost("GreenTaskA gives semPtr");
+			printf("GreenTaskA gives semPtr\r\n");
 			xSemaphoreGive(semPtr);
 		}
 		GreenLed.On();
@@ -90,10 +89,10 @@ void BlueTaskB( void* argument )
 		// 'take' the semaphore with no timeout.
 	    // * In our system, FreeRTOSConfig.h specifies "#define INCLUDE_vTaskSuspend 1".
 	    // * So, in xSemaphoreTake, portMAX_DELAY specifies an indefinite wait.
-		SEGGER_SYSVIEW_PrintfHost("BlueTaskB attempts to take semPtr");
+		printf("BlueTaskB attempts to take semPtr\r\n");
 		if(xSemaphoreTake(semPtr, portMAX_DELAY) == pdPASS)
 		{
-			SEGGER_SYSVIEW_PrintfHost("BlueTaskB received semPtr");
+			printf("BlueTaskB received semPtr\r\n");
 			// Triple-blink the Blue LED
 			for(uint_fast8_t i = 0; i < 3; i++)
 			{

@@ -9,15 +9,16 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
 */
+#include <stdio.h>
 
 #include <FreeRTOS.h>
-#include <Nucleo_F767ZI_GPIO.h>
 #include <task.h>
 #include <semphr.h>
 #include <timers.h>
-#include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include <lookBusy.h>
 
 #define STACK_SIZE 128
@@ -32,7 +33,6 @@ uint32_t iterationsPerMilliSecond;
 int main(void)
 {
 	HWInit();
-	SEGGER_SYSVIEW_Conf();
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	//ensure proper priority grouping for FreeRTOS
 
     // Get the interation-rate for lookBusy()
@@ -58,12 +58,9 @@ void taskStartTimers( void* argument )
     // Indicate taskStartTimers started
     RedLed.On();
     // Spin until the user starts the SystemView app, in Record mode
-    while(SEGGER_SYSVIEW_IsStarted()==0){
-        lookBusy(iterationsPerMilliSecond);
-    }
     RedLed.Off();
 
-	SEGGER_SYSVIEW_PrintfHost("taskStartTimers: starting");
+	printf("taskStartTimers: starting\r\n");
 
     //
     // Create the one-shot timer, and start it
@@ -71,7 +68,7 @@ void taskStartTimers( void* argument )
 
 	// Start with Blue LED on - it will be turned off after one-shot fires
 	BlueLed.On();
-	SEGGER_SYSVIEW_PrintfHost("taskStartTimers: blue LED on");
+	printf("taskStartTimers: blue LED on\r\n");
 	TimerHandle_t oneShotHandle =
 		xTimerCreate(	"myOneShotTimer",			//name for timer
 						2200 /portTICK_PERIOD_MS,	//period of timer in ticks
@@ -80,7 +77,7 @@ void taskStartTimers( void* argument )
 						oneShotCallBack);			//callback function
 	assert_param(oneShotHandle != NULL);
 
-	SEGGER_SYSVIEW_PrintfHost("taskStartTimers: one-shot timer started (turns off blue LED)");
+	printf("taskStartTimers: one-shot timer started (turns off blue LED)\r\n");
 	xTimerStart(oneShotHandle, 0);
 
 
@@ -96,12 +93,12 @@ void taskStartTimers( void* argument )
                         repeatCallBack);            //callback function
     assert_param(repeatHandle != NULL);
 
-    SEGGER_SYSVIEW_PrintfHost("taskStartTimers: repeating-timer started (blinks the green LED)");
+    printf("taskStartTimers: repeating-timer started (blinks the green LED)\r\n");
     xTimerStart(repeatHandle, 0);
 
 
 	// The task deletes itself
-    SEGGER_SYSVIEW_PrintfHost("taskStartTimers: deleting itself");
+    printf("taskStartTimers: deleting itself\r\n");
 	vTaskDelete(NULL);
 
     // The task never gets to here
@@ -114,7 +111,7 @@ void taskStartTimers( void* argument )
 
 void oneShotCallBack( TimerHandle_t xTimer )
 {
-	SEGGER_SYSVIEW_PrintfHost("oneShotCallBack:  blue LED off");
+	printf("oneShotCallBack:  blue LED off\r\n");
 	BlueLed.Off();
 }
 
@@ -123,7 +120,7 @@ void repeatCallBack( TimerHandle_t xTimer )
 {
 	static uint32_t counter = 0;
 
-	SEGGER_SYSVIEW_PrintfHost("repeatCallBack:  toggle Green LED");
+	printf("repeatCallBack:  toggle Green LED\r\n");
 	// Toggle the green LED
 	if(counter++ % 2)
 	{
