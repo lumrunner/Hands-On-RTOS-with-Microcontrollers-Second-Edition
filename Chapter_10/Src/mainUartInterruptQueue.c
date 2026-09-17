@@ -9,16 +9,17 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
+#include <stdio.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
 #include <semphr.h>
 #include <timers.h>
-#include <Nucleo_F767ZI_GPIO.h>
-#include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include <UartQuickDirtyInit.h>
 #include "Uart4Setup.h"
 #include <stdbool.h>
@@ -36,7 +37,7 @@ Licenses:
 void uartPrintOutTask( void* NotUsed);
 void startUart4Traffic( TimerHandle_t xTimer );
 
-static QueueHandle_t usart2_BytesReceived = NULL;
+static QueueHandle_t usart3_BytesReceived = NULL;
 
 // Indicates USART2 is enabled to receive
 static volatile bool rxInProgress = false;
@@ -44,17 +45,15 @@ static volatile bool rxInProgress = false;
 int main(void)
 {
 	HWInit();
-	SEGGER_SYSVIEW_Conf();
 
-	// Ensure proper priority grouping for freeRTOS
-	NVIC_SetPriorityGrouping(0);
+	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4); //ensure proper priority grouping for freeRTOS
 
 	// Setup a timer to kick off UART traffic (flowing out of UART4 TX line
-	// and into USART2 RX line) 5 seconds after the scheduler starts.
+	// and into USART3 RX line) 5 seconds after the scheduler starts.
 	// The transmission needs to start after the receiver is ready for data.
 	TimerHandle_t oneShotHandle =
 	xTimerCreate(	"startUart4Traffic",
-					5000 /portTICK_PERIOD_MS,
+					5000 / portTICK_PERIOD_MS,
 					pdFALSE,
 					NULL,
 					startUart4Traffic);
@@ -62,8 +61,8 @@ int main(void)
 	xTimerStart(oneShotHandle, 0);
 
     // Create the queue
-	usart2_BytesReceived = xQueueCreate(10, sizeof(char));
-	assert_param(usart2_BytesReceived != NULL);
+	usart3_BytesReceived = xQueueCreate(10, sizeof(char));
+	assert_param(usart3_BytesReceived != NULL);
 
     // Setup the task, making sure they have been properly created before moving on
 	assert_param(xTaskCreate(uartPrintOutTask, "uartPrint", STACK_SIZE, NULL, tskIDLE_PRIORITY + 3, NULL) == pdPASS);
@@ -84,11 +83,11 @@ int main(void)
 void startReceiveInt( void )
 {
 	rxInProgress = true;
-	USART2->CR3 |= USART_CR3_EIE;	//enable error interrupts
-	USART2->CR1 |= (USART_CR1_UE | USART_CR1_RXNEIE);
+	USART3->CR3 |= USART_CR3_EIE;	//enable error interrupts
+	USART3->CR1 |= (USART_CR1_UE | USART_CR1_RXNEIE);
 	//all 4 bits are for preemption priority -
-	NVIC_SetPriority(USART2_IRQn, 6);
-	NVIC_EnableIRQ(USART2_IRQn);
+	NVIC_SetPriority(USART3_IRQn, 5);
+	NVIC_EnableIRQ(USART3_IRQn);
 }
 
 void startUart4Traffic( TimerHandle_t xTimer )
@@ -99,47 +98,37 @@ void startUart4Traffic( TimerHandle_t xTimer )
 void uartPrintOutTask( void* NotUsed)
 {
 	char nextByte;
-	STM_UartInit(USART2, BAUDRATE, NULL, NULL);
+	STM_UartInit(USART3, BAUDRATE, NULL, NULL);
 	startReceiveInt();
 
 	while(1)
 	{
-		xQueueReceive(usart2_BytesReceived, &nextByte, portMAX_DELAY);
+		xQueueReceive(usart3_BytesReceived, &nextByte, portMAX_DELAY);
 		// In "%c ", the space is a workaround for an apparent bug in SystemView.
-		SEGGER_SYSVIEW_PrintfHost("%c ", nextByte);
+		printf("%c\n", nextByte);
 	}
 }
 
-void USART2_IRQHandler( void )
+void USART3_IRQHandler( void )
 {
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-	SEGGER_SYSVIEW_RecordEnterISR();
+	// Clear error flags
+	USART3->SR &= ~(USART_SR_FE |
+					USART_SR_PE |
+					USART_SR_NE |
+					USART_SR_ORE);
 
-	// First check for errors
-	if(	USART2->ISR & (	USART_ISR_ORE_Msk |
-						USART_ISR_NE_Msk |
-						USART_ISR_FE_Msk |
-						USART_ISR_PE_Msk ))
-	{
-		// Clear error flags
-		USART2->ICR |= (USART_ICR_FECF |
-						USART_ICR_PECF |
-						USART_ICR_NCF |
-						USART_ICR_ORECF);
-	}
-
-	if(	USART2->ISR & USART_ISR_RXNE_Msk)
+	if(	USART3->SR & USART_SR_RXNE)
 	{
 		// Read the data register unconditionally to clear
 		// the receive-not-empty interrupt if no reception is
 		// in progress
-		uint8_t tempVal = (uint8_t) USART2->RDR;
+		uint8_t tempVal = (uint8_t) USART3->DR;
 
 		if(rxInProgress)
 		{
-			xQueueSendFromISR(usart2_BytesReceived, &tempVal, &xHigherPriorityTaskWoken);
+			xQueueSendFromISR(usart3_BytesReceived, &tempVal, &xHigherPriorityTaskWoken);
 		}
 	}
-	SEGGER_SYSVIEW_RecordExitISR();
 	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }

@@ -9,14 +9,15 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
+#include <stdio.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
-#include <Nucleo_F767ZI_GPIO.h>
-#include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include <UartQuickDirtyInit.h>
 #include "Uart4Setup.h"
 #include <lookBusy.h>
@@ -25,6 +26,7 @@ Licenses:
  * A demonstration of a polled UART driver for
  * sending and receiving
  *********************************************/
+#define BAUDRATE 9600
 
 #define STACK_SIZE 128
 
@@ -32,7 +34,7 @@ void polledUartReceive ( void* NotUsed );
 void uartPrintOutTask( void* NotUsed);
 void startUpTask( void* NotUsed);
 
-static QueueHandle_t uart2_BytesReceived = NULL;
+static QueueHandle_t uart3_BytesReceived = NULL;
 
 uint32_t iterationsPerMilliSecond;
 
@@ -42,9 +44,8 @@ int main(void)
 
     // Start UART4, and have it continuously send data.
     // UART4 continuously sends the string "data from uart4", including the null-terminator.
-    SetupUart4ExternalSim(9600);
+    SetupUart4ExternalSim(BAUDRATE);
 
-    SEGGER_SYSVIEW_Conf();
     HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4); //ensure proper priority grouping for freeRTOS
 
     // Get the interation-rate for lookBusy()
@@ -56,7 +57,7 @@ int main(void)
     assert_param(xTaskCreate(startUpTask, "startUpTask", STACK_SIZE, NULL, tskIDLE_PRIORITY + 4, NULL) == pdPASS);
 
     // Create the queue.
-    uart2_BytesReceived = xQueueCreate(10, sizeof(char));
+    uart3_BytesReceived = xQueueCreate(10, sizeof(char));
 
     // Start the scheduler - shouldn't return unless there's a problem
     vTaskStartScheduler();
@@ -77,11 +78,6 @@ void startUpTask( void* NotUsed )
     // Indicate startUpTask has started
     BlueLed.On();
 
-    // Spin until the user starts the SystemView app, in Record mode
-    while(SEGGER_SYSVIEW_IsStarted()==0){
-        lookBusy(iterationsPerMilliSecond);
-    }
-
     BlueLed.Off();
 
     vTaskDelete(NULL);
@@ -94,13 +90,10 @@ void uartPrintOutTask( void* NotUsed)
 
     while(1)
     {
-        xQueueReceive(uart2_BytesReceived, &nextByte, portMAX_DELAY);
+        xQueueReceive(uart3_BytesReceived, &nextByte, portMAX_DELAY);
 
-        // * The argument "%c " has an added space.
-        // * The added space is a work-around to an apparent bug in SystemView.
-        // * The bug: the argument "%c" results in no character being displayed
-        //   in the SystemView app.
-        SEGGER_SYSVIEW_PrintfHost("%c ", nextByte);
+        // newline necessary for characters to be displayed
+        printf("%c\n", nextByte);
     }
 }
 
@@ -112,14 +105,14 @@ void polledUartReceive( void* NotUsed )
 {
     uint8_t nextByte;
     // Setup USART2
-    STM_UartInit(USART2, 9600, NULL, NULL);
+    STM_UartInit(USART3, BAUDRATE, NULL, NULL);
 
     while(1)
     {
-        while(!(USART2->ISR & USART_ISR_RXNE_Msk));
-        nextByte = USART2->RDR;
+        while(!(USART3->SR & USART_SR_RXNE));
+        nextByte = USART3->DR;
 
-        xQueueSend(uart2_BytesReceived, &nextByte, 0);
+        xQueueSend(uart3_BytesReceived, &nextByte, 0);
     }
 }
 
