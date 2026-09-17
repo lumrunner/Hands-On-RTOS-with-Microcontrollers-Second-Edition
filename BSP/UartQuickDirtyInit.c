@@ -27,16 +27,39 @@
 #include <stm32f4xx_hal.h>
 
 // Initialize the pins for USART2
+// NOTE: USART2 is used for cdc terminal
 void initUart2Pins( void )
 {
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-	//PD6 is USART2_RX, PD5 is USART2_TX
-	GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6;
+	//PA2 is USART2_TX, PA3 is USART2_RX
+	GPIO_InitStruct.Pin = GPIO_PIN_2 | GPIO_PIN_3;
 	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-	HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+
+// Initialize the pins for UART3
+void initUart3Pins( void )
+{
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+	//PB10 is UART3_TX, PC5 is UART3_RX
+	GPIO_InitStruct.Pin = GPIO_PIN_5;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = GPIO_PIN_10;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
 // Initialize the pins for UART4
@@ -44,10 +67,18 @@ void initUart4Pins( void )
 {
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-	//PC10 is UART4_TX, PC11 is UART4_RX
-	GPIO_InitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_11;
+	//PC10 is UART4_TX, PA1 is UART4_RX
+	GPIO_InitStruct.Pin = GPIO_PIN_1;
 	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitStruct.Alternate = GPIO_AF8_UART4;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	GPIO_InitStruct.Pin = GPIO_PIN_10;
+	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitStruct.Alternate = GPIO_AF8_UART4;
 	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 }
@@ -70,12 +101,18 @@ HAL_StatusTypeDef STM_UartInit( USART_TypeDef* STM_UART_PERIPH, uint32_t Baudrat
 	HAL_StatusTypeDef retVal;
 	UART_HandleTypeDef uartInitStruct;
 	assert_param(	STM_UART_PERIPH == USART2 ||
+					STM_UART_PERIPH == USART3 ||
 					STM_UART_PERIPH == UART4 );
 
 	if(STM_UART_PERIPH == USART2)
 	{
 		initUart2Pins();
 		__USART2_CLK_ENABLE();
+	}
+	else if (STM_UART_PERIPH == USART3)
+	{
+		initUart3Pins();
+		__USART3_CLK_ENABLE();
 	}
 	else if (STM_UART_PERIPH == UART4)
 	{

@@ -14,7 +14,7 @@ Licenses:
 #include <FreeRTOS.h>
 #include "Nucleo_F446RE_Init.h"
 #include <Nucleo_F446RE_GPIO.h>
-//#include <main.h>
+#include "UartQuickDirtyInit.h"
 
 //#define CHANGE_ME 0
 
@@ -56,6 +56,7 @@ void SystemClock_Config(void)
 {
 	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
 	/** Configure LSE Drive Capability
 	*/
@@ -98,6 +99,20 @@ void SystemClock_Config(void)
 	{
 		Error_Handler();
 	}
+
+	__HAL_RCC_USB_OTG_FS_CLK_ENABLE();
+	/** Initializes the peripherals clock */
+	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_CLK48;
+	PeriphClkInitStruct.PLLSAI.PLLSAIM = 8;
+	PeriphClkInitStruct.PLLSAI.PLLSAIN = 192;
+	PeriphClkInitStruct.PLLSAI.PLLSAIQ = 2;
+	PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV4;
+	PeriphClkInitStruct.PLLSAIDivQ = 1;
+	PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLSAIP;
+	if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+	{
+	  Error_Handler();
+	}
 }
 
 /************************************* PRIVATE FUNCTIONS **************************/
@@ -133,6 +148,13 @@ static void gpioPinsInit(void)
 
   /*Configure LEDs off by default */
   HAL_GPIO_WritePin(LD_GPIO_Port, LD3_Pin|LD2_Pin|LD1_Pin, GPIO_PIN_RESET);
+
+  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : USB_PowerSwitchOn_Pin */
   //GPIO_InitStruct.Pin = USB_PowerSwitchOn_Pin;
