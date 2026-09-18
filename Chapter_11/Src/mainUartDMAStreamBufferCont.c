@@ -9,15 +9,16 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
+#include <stdio.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
 #include <stream_buffer.h>
 #include <timers.h>
-#include <Nucleo_F767ZI_GPIO.h>
-#include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include <UartQuickDirtyInit.h>
 #include "Uart4Setup.h"
 #include <stdbool.h>
@@ -37,7 +38,7 @@ void startUart4Traffic( TimerHandle_t xTimer );
 
 static StreamBufferHandle_t streamBuffer = NULL;
 
-static DMA_HandleTypeDef usart2DmaRx;
+static DMA_HandleTypeDef usart3DmaRx;
 
 // NOTE: Keep buffers less than 1KB to simplify DMA implementation.
 //       See MCU reference manual, section 8.3.12 for details
@@ -54,7 +55,7 @@ static volatile uint8_t rxData2[DMA_BUFFER_LENGTH];
 #define MIN_RECEIVE_SIZE  DMA_BUFFER_LENGTH
 
 // Test variables
-static volatile uint32_t test_DMA1_Stream5_IRQHandler_notExpected = 0;
+static volatile uint32_t test_DMA1_Stream1_IRQHandler_notExpected = 0;
 static volatile uint32_t test_startReceiveDMA_halDmaStartFailed = 0;
 static volatile uint32_t test_uartPrintOutTask_xStreamBufferReceiveTimeout = 0;
 static volatile uint32_t test_uartPrintOutTask_received = 0;
@@ -63,13 +64,12 @@ static volatile uint32_t test_uartPrintOutTask_xferNotComplete = 0;
 int main(void)
 {
     HWInit();
-    SEGGER_SYSVIEW_Conf();
 
     // Ensure proper priority grouping for freeRTOS
     NVIC_SetPriorityGrouping(0);
 
     // Setup a timer to kick off UART traffic (flowing out of UART4 TX line
-    // and into USART2 RX line) 5 seconds after the scheduler starts.
+    // and into USART3 RX line) 5 seconds after the scheduler starts.
     // The transmission needs to start after the receiver is ready for data.
     TimerHandle_t oneShotHandle =
             xTimerCreate(	"startUart4Traffic",
@@ -97,7 +97,7 @@ int main(void)
 
 
 /**
- * Sets up DMA for USART2 circular reception
+ * Sets up DMA for USART3 circular reception
  * NOTE: After returning from this function, the DMA stream
  * is enabled.  To perform additional configuration, the
  * stream might need to be disabled (i.e. when setting up
@@ -105,46 +105,46 @@ int main(void)
  */
 
 /**
- setupUSART2DMA():
+ setupUSART3DMA():
  * Enable the clock for the DMA1 controller
- * Enable the IRQ for DMA1 Stream5
+ * Enable the IRQ for DMA1 Stream1
  * Configure and initialize DMA stream
    * Configure the struct that specifies the DMA stream
    * Calls HAL_DMA_Init() to initialize the DMA stream
      *  HAL_DMA_Init() first calls __HAL_DMA_DISABLE()
  * Enable the DMA transfer-complete interrupt
  */
-void setupUSART2DMA( void )
+void setupUSART3DMA( void )
 {
     // __HAL_RCC_DMA1_CLK_ENABLE : AHB1 Peripheral Clock Enable
     // * Prior to calling HAL_DMA_Init() the clock must be enabled for DMA through this macro.
     __HAL_RCC_DMA1_CLK_ENABLE();
 
-    NVIC_SetPriority(DMA1_Stream5_IRQn, 6);
-    NVIC_EnableIRQ(DMA1_Stream5_IRQn);
+    NVIC_SetPriority(DMA1_Stream1_IRQn, 6);
+    NVIC_EnableIRQ(DMA1_Stream1_IRQn);
 
-    // The DMA stream is configured by filling out usart2DmaRx
-    memset(&usart2DmaRx, 0, sizeof(usart2DmaRx));
+    // The DMA stream is configured by filling out usart3DmaRx
+    memset(&usart3DmaRx, 0, sizeof(usart3DmaRx));
 
-    // Specify stream 5
-    usart2DmaRx.Instance = DMA1_Stream5;
+    // Specify stream 1
+    usart3DmaRx.Instance = DMA1_Stream1;
     // Specify channel 4
-    usart2DmaRx.Init.Channel = DMA_CHANNEL_4;
+    usart3DmaRx.Init.Channel = DMA_CHANNEL_4;
     // Specify the data-transfer is from the peripheral to memory
-    usart2DmaRx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    usart3DmaRx.Init.Direction = DMA_PERIPH_TO_MEMORY;
     // Specify not to use the stream’s FIFO queue.
     // * This is referred to as “direct mode”.
     // * After each single data transfer from the peripheral to the
     //   FIFO, the data is immediately stored into the memory
     //   destination.
-    usart2DmaRx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+    usart3DmaRx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     // Specify the stream’s priority, relative to other streams
     // in the DMA controller.
-    usart2DmaRx.Init.Priority = DMA_PRIORITY_HIGH;
+    usart3DmaRx.Init.Priority = DMA_PRIORITY_HIGH;
     // Specifies the DMA mode.
     // * Circular mode restarts transfers after a buffer is filled
     // * (See the MCU reference manual, section 8.3.9.)
-    usart2DmaRx.Init.Mode = DMA_CIRCULAR;
+    usart3DmaRx.Init.Mode = DMA_CIRCULAR;
 
     //
     // Peripheral-transfer configuration
@@ -152,14 +152,14 @@ void setupUSART2DMA( void )
 
     // DMA Peripheral data size.
     // * Specifies one byte.
-    usart2DmaRx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    usart3DmaRx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
     // Specify that the peripheral address is not incremented
     // after each transfer.
-    usart2DmaRx.Init.PeriphInc = DMA_PINC_DISABLE;
+    usart3DmaRx.Init.PeriphInc = DMA_PINC_DISABLE;
     // Specify the DMA controller should generate a “single transfer”.
     // * Each DMA request generates a data transfer of a byte.
     // * Since direct-mode is used, “single transfer” must be used.
-    usart2DmaRx.Init.PeriphBurst = DMA_PBURST_SINGLE;
+    usart3DmaRx.Init.PeriphBurst = DMA_PBURST_SINGLE;
 
     //
     // Memory-transfer configuration
@@ -167,23 +167,23 @@ void setupUSART2DMA( void )
 
     // DMA memory data-size
     // * Specifies one byte.
-    usart2DmaRx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    usart3DmaRx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
     // Enable memory incrementing.
     // * The DMA controller will increment the memory address
     //   after a transfer
-    usart2DmaRx.Init.MemInc = DMA_MINC_ENABLE;
+    usart3DmaRx.Init.MemInc = DMA_MINC_ENABLE;
     // Specify the DMA controller should generate a “single transfer”.
     // * Each DMA request generates a data transfer of a byte.
     // * Since direct-mode is used, “single transfer” must be used.
-    usart2DmaRx.Init.MemBurst = DMA_MBURST_SINGLE;
+    usart3DmaRx.Init.MemBurst = DMA_MBURST_SINGLE;
 
-    // HAL_DMA_Init : Initialize the DMA stream specified in usart2DmaRx, and create the
+    // HAL_DMA_Init : Initialize the DMA stream specified in usart3DmaRx, and create the
     // associated handle.
-    assert_param(HAL_DMA_Init(&usart2DmaRx) == HAL_OK);
+    assert_param(HAL_DMA_Init(&usart3DmaRx) == HAL_OK);
 
     // DMA stream x configuration register (DMA_SxCR)
     // * TCIE: transfer-complete interrupt enable
-    DMA1_Stream5->CR |= DMA_SxCR_TCIE;
+    DMA1_Stream1->CR |= DMA_SxCR_TCIE;
 }
 
 /**
@@ -194,50 +194,50 @@ int32_t startReceiveDMA( void )
 
     // Get the DMA peripheral ready to receive data immediately before enabling UART
     // * __HAL_DMA_DISABLE : Disables the specified DMA Stream.
-    __HAL_DMA_DISABLE(&usart2DmaRx);
+    __HAL_DMA_DISABLE(&usart3DmaRx);
     // Wait for the EN bit to be set to 0.
-    // * Described in ST's “Using the . . . STM32F7 Series DMA controller” (AN4031)
-    while((DMA1_Stream5->CR & DMA_SxCR_EN) != 0);
+    // * Described in ST's “Using the . . . STM32F4 Series DMA controller” (AN4031)
+    while((DMA1_Stream1->CR & DMA_SxCR_EN) != 0);
 
-    // setupUSART2DMA():
+    // setupUSART3DMA():
     // * Configure and initialize DMA stream
     // * Enable the DMA transfer-complete interrupt
-    setupUSART2DMA();
+    setupUSART3DMA();
 
     // DMA is configured to write to two buffers: rxData1 and rxData2.
     // * In configuring DMA:
-    //   * The first buffer's address is specified in the DMA register: DMA1_Stream5->M0AR
-    //   * The second buffer's address is specified in: DMA1_Stream5->M1AR
-    // * DMA1_Stream5->M0AR is set to the address of rxData1, by HAL_DMA_Start()
+    //   * The first buffer's address is specified in the DMA register: DMA1_Stream1->M0AR
+    //   * The second buffer's address is specified in: DMA1_Stream1->M1AR
+    // * DMA1_Stream1->M0AR is set to the address of rxData1, by HAL_DMA_Start()
     //   * It is called further below. The address of rxData1 is an argument.
-    // * DMA1_Stream5->M1AR is set below.
+    // * DMA1_Stream1->M1AR is set below.
 
     // Setup second address for double-buffered mode
-    DMA1_Stream5->M1AR = (uint32_t) rxData2;
+    DMA1_Stream1->M1AR = (uint32_t) rxData2;
 
     // NOTE: HAL_DMA_Start explicitly disables double-buffer mode
     //	  	 so we'll explicitly enable double buffer mode later when
     //		 the actual transfer is started
     // HAL_DMA_Start : Starts the DMA Transfer
     // * Enables the DMA stream (sets the EN bit in the DMA_SxCR register).
-    // * Parameter USART2->RDR : USART Receive Data register
-    if(HAL_DMA_Start(&usart2DmaRx, (uint32_t)&(USART2->RDR), (uint32_t)rxData1, DMA_BUFFER_LENGTH) != HAL_OK)
+    // * Parameter USART3->RDR : USART Receive Data register
+    if(HAL_DMA_Start(&usart3DmaRx, (uint32_t)&(USART3->DR), (uint32_t)rxData1, DMA_BUFFER_LENGTH) != HAL_OK)
     {
         test_startReceiveDMA_halDmaStartFailed++;
         return -1;
     }
 
     // Disable the stream and controller so we can setup dual buffers
-    __HAL_DMA_DISABLE(&usart2DmaRx);
+    __HAL_DMA_DISABLE(&usart3DmaRx);
     // Wait for the EN bit to be set to 0.
-    while((DMA1_Stream5->CR & DMA_SxCR_EN) != 0);
+    while((DMA1_Stream1->CR & DMA_SxCR_EN) != 0);
 
     // Set the double-buffer mode
-    DMA1_Stream5->CR |= DMA_SxCR_DBM;
+    DMA1_Stream1->CR |= DMA_SxCR_DBM;
 
     // Re-enable the stream and controller
-    __HAL_DMA_ENABLE(&usart2DmaRx);
-    DMA1_Stream5->CR |= DMA_SxCR_EN;
+    __HAL_DMA_ENABLE(&usart3DmaRx);
+    DMA1_Stream1->CR |= DMA_SxCR_EN;
 
     return 0;
 }
@@ -262,31 +262,33 @@ void uartPrintOutTask( void* NotUsed)
     // Configure and initialize the DMA stream
     startReceiveDMA();
 
-    // Initialize USART2, pass usart2DmaRx for use in receive
-    STM_UartInit(USART2, BAUDRATE, NULL, &usart2DmaRx);
+    // Initialize USART3, pass usart3DmaRx for use in receive
+    STM_UartInit(USART3, BAUDRATE, NULL, &usart3DmaRx);
 
     // Control register 3 (USART_CR3)
     // * DMAR: DMA enable receiver
     // * 1: DMA mode is enabled for reception
-    USART2->CR3 |= USART_CR3_DMAR_Msk;
+    USART3->CR3 |= USART_CR3_DMAR_Msk;
 
     // Clear error flags.
     // Needed for reception to resume after being paused in the debugger.
-    USART2->ICR |= ( USART_ICR_FECF | USART_ICR_PECF |
-                     USART_ICR_NCF | USART_ICR_ORECF );
+    USART3->SR &= ~(USART_SR_FE |
+					USART_SR_PE |
+					USART_SR_NE |
+					USART_SR_ORE);
 
     // For this specific instance, we'll avoid enabling UART interrupts for errors since
     // we'll wind up with a lot of noise on the line at high baud-rates (the way the ISR is written will
     // cause a transfer to terminate if there are any errors are detected, rather than simply
     // continue with what data it can).
-    //USART2->CR3 |= (USART_CR3_EIE);   //enable error interrupts
-    //USART2->CR1 |= USART_CR1_RXNEIE | USART_CR1_PEIE);
+    //USART3->CR3 |= (USART_CR3_EIE);   //enable error interrupts
+    //USART3->CR1 |= USART_CR1_RXNEIE | USART_CR1_PEIE);
 
-    //NVIC_SetPriority(USART2_IRQn, 6);
-    //NVIC_EnableIRQ(USART2_IRQn);
+    //NVIC_SetPriority(USART3_IRQn, 6);
+    //NVIC_EnableIRQ(USART3_IRQn);
 
     // Enable the UART
-    USART2->CR1 |= USART_CR1_UE;
+    USART3->CR1 |= USART_CR1_UE;
 
     while(1)
     {
@@ -308,8 +310,9 @@ void uartPrintOutTask( void* NotUsed)
             // Add a null-terminator to the end of the string (needed by SEGGER_SYSVIEW_Print)
             rxBufferedData[numBytes] = 0;
 
-            SEGGER_SYSVIEW_PrintfHost("received: ");
-            SEGGER_SYSVIEW_Print((char*)rxBufferedData);
+            printf("received: ");
+            printf((char*)rxBufferedData);
+            printf("\n");
 
             test_uartPrintOutTask_received++;
             if (numBytes < DMA_BUFFER_LENGTH){
@@ -322,33 +325,32 @@ void uartPrintOutTask( void* NotUsed)
             // * So, xStreamBufferReceive will timeout 50 times before
             //   UART4 starts sending data.
             test_uartPrintOutTask_xStreamBufferReceiveTimeout++;
-            SEGGER_SYSVIEW_PrintfHost("timeout");
+            printf("timeout\n");
         }
     }
 }
 
 /**
- * Given the DMA setup performed by setupUSART2DMA
+ * Given the DMA setup performed by setupUSART3DMA
  * this ISR will only execute when a DMA transfer is complete.
  *
  * Each time a transfer is completed, the DMA controller will
  * automatically start writing to the opposite buffer.
  * For example the controller will initially be writing to the buffer
- * specified in DMA1_Stream5->M0AR.
+ * specified in DMA1_Stream1->M0AR.
  * After this buffer is filled, the DMA controller will start writing
- * to the buffer in DMA1_Stream5->M1AR.
+ * to the buffer in DMA1_Stream1->M1AR.
  *
  */
-void DMA1_Stream5_IRQHandler(void)
+void DMA1_Stream1_IRQHandler(void)
 {
     uint16_t numWritten = 0;
     volatile uint8_t* dmaBufferPtr = NULL;
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-    SEGGER_SYSVIEW_RecordEnterISR();
 
     // DMA high interrupt status register (DMA_HISR)
     // * TCIF[7:4]: stream x transfer-complete interrupt-flag
-    if(DMA1->HISR & DMA_HISR_TCIF5)
+    if(DMA1->LISR & DMA_LISR_TCIF1)
     {
 
         // Copy data from the correct memory-buffer into the freeRTOS stream buffer.
@@ -356,7 +358,7 @@ void DMA1_Stream5_IRQHandler(void)
         //   which is either DMA_SxM0AR or DMA_SxM1AR.
         // * See the MCU reference manual, section 8.5.5 for details
         //   on the CT bit of the DMA_SxCR register.
-        if(DMA1_Stream5->CR & DMA_SxCR_CT)
+        if(DMA1_Stream1->CR & DMA_SxCR_CT)
         {
             dmaBufferPtr = rxData1;
         }
@@ -375,17 +377,16 @@ void DMA1_Stream5_IRQHandler(void)
         // Spin, to identify the error.
         while(numWritten != DMA_BUFFER_LENGTH);
 
-        // DMA high interrupt flag clear register (DMA_HIFCR)
+        // DMA high interrupt flag clear register (DMA_LIFCR)
         // * CTCIF[7:4]: stream x clear transfer-complete interrupt-flag
         //   * Writing 1 to this bit clears the corresponding TCIFx flag in
-        //     the DMA_HISR register.
-        DMA1->HIFCR |= DMA_HIFCR_CTCIF5;
+        //     the DMA_LISR register.
+        DMA1->LIFCR |= DMA_LIFCR_CTCIF1;
     }
     else
     {
-        test_DMA1_Stream5_IRQHandler_notExpected++;
+        test_DMA1_Stream1_IRQHandler_notExpected++;
     }
 
-    SEGGER_SYSVIEW_RecordExitISR();
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
