@@ -9,17 +9,17 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-
+#include <string.h>
+#include <stdio.h>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
-#include <Nucleo_F767ZI_GPIO.h>
-#include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include "vcpDriverMultiTask.h"
-#include <string.h>
-#include <stdio.h>
+
 #include <pwmImplementation.h>
 #include <ledCmdExecutor.h>
 #include <CRC32.h>
@@ -41,7 +41,6 @@ int main(void)
 	HWInit();
 	PWMInit();
 	vcpInit();
-	SEGGER_SYSVIEW_Conf();
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	// Ensure proper priority grouping for freeRTOS
 
 	// Create a queue for LedCmd structs, capable of holding up to 4 commands
