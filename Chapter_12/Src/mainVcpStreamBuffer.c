@@ -9,16 +9,16 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
+#include <string.h>
+#include <stdio.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
-#include <Nucleo_F767ZI_GPIO.h>
-#include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include "vcpDriver.h"
-#include <string.h>
-#include <stdio.h>
 #include <unsignedToAscii.h>
 
 /* This program uses the driver vcpDriver, to send data over USB.
@@ -36,8 +36,6 @@ int main(void)
 
     // Initialize USB, and the driver vcpDriver
     vcpInit();
-
-    SEGGER_SYSVIEW_Conf();
 
     // Ensure proper priority grouping for FreeRTOS
     HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
