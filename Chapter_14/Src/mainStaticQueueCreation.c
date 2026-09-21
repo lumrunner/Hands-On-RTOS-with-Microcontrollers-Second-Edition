@@ -11,10 +11,11 @@ Licenses:
  */
 
 #include <FreeRTOS.h>
-#include <Nucleo_F767ZI_GPIO.h>
 #include <queue.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 
 /*********************************************
  * A simple demonstration of creating a queue
@@ -81,7 +82,9 @@ static uint8_t queueStorage[LED_CMD_QUEUE_LEN];
 int main(void)
 {
 	HWInit();
-	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	// Ensure proper priority grouping for freeRTOS
+
+	// Ensure proper priority grouping for freeRTOS
+	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 	BaseType_t retVal;
 
 	// Setup tasks, making sure they have been properly created before moving on
