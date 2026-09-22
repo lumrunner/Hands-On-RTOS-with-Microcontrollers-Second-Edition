@@ -25,13 +25,13 @@
  */
 
 #include <FreeRTOS.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
-#include <Nucleo_F767ZI_GPIO.h>
+#include <Nucleo_F446RE_Init.h>
+#include <stm32f4xx_hal.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include <task.h>
-#include <SEGGER_SYSVIEW.h>
 #include <lookBusy.h>
 
+#include <stdio.h>
 /**
  * 	Function prototypes
  */
@@ -44,31 +44,31 @@ uint32_t iterationsPerMilliSecond;
 int main(void)
 {
   // Recommended minimum stack size per task
-	//   128 * 4 = 512 bytes
-	const static uint32_t stackSize = 128;
-	HWInit();
-	SEGGER_SYSVIEW_Conf();
-	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	//ensure proper priority grouping for freeRTOS
+  //   128 * 4 = 512 bytes
+  const static uint32_t stackSize = 128;
+  HWInit();
+  //SEGGER_SYSVIEW_Conf();
+  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	//ensure proper priority grouping for freeRTOS
 
-	// Get the interation-rate for lookBusy()
-	iterationsPerMilliSecond = lookBusyIterationRate();
+  // Get the interation-rate for lookBusy()
+  iterationsPerMilliSecond = lookBusyIterationRate();
 
-	if (xTaskCreate(Task1, "task1", stackSize, NULL, tskIDLE_PRIORITY + 3, NULL) == pdPASS)
-	{
-		if (xTaskCreate(Task2, "task2", stackSize, NULL, tskIDLE_PRIORITY + 2, NULL) == pdPASS)
-		{
-			if (xTaskCreate(Task3, "task3", stackSize, NULL, tskIDLE_PRIORITY + 1, NULL) == pdPASS)
-			{
-				// Start the scheduler - shouldn't return unless there's a problem
-				vTaskStartScheduler();
-			}
-		}
-	}
+  if (xTaskCreate(Task1, "task1", stackSize, NULL, tskIDLE_PRIORITY + 3, NULL) == pdPASS)
+  {
+    if (xTaskCreate(Task2, "task2", stackSize, NULL, tskIDLE_PRIORITY + 2, NULL) == pdPASS)
+    {
+      if (xTaskCreate(Task3, "task3", stackSize, NULL, tskIDLE_PRIORITY + 1, NULL) == pdPASS)
+      {
+	// Start the scheduler - shouldn't return unless there's a problem
+	vTaskStartScheduler();
+      }
+    }
+  }
 
-	// If you've wound up here, there is likely an issue with over-running the FreeRTOS heap
-	while(1)
-	{
-	}
+  // If you've wound up here, there is likely an issue with over-running the FreeRTOS heap
+  while(1)
+  {
+  }
 }
 
 
@@ -77,19 +77,10 @@ void Task1(void *argument)
   uint32_t lookBusyIterations;
   uint32_t iterationCount = 0;
 
-  BlueLed.On();
+  //BlueLed.On();
 
-  // * The SystemView app's Record-mode cannot be started until after the FreeRTOS scheduler is started.
-  //   This is a SystemView requirement.
-  // * This while-loop spins until Record-mode is started.
-  // * Also, spinning until Record-mode is started ensures all of the SEGGER_SYSVIEW_PrintfHost()
-  //   messages will be displayed.
-  // * lookBusy() is used to slow-down the while-loop.
-  //   * SEGGER_SYSVIEW_IsStarted() communicates with the SystemView app on the development computer.
-  //   * There is a non-trivial communication latency. If SEGGER_SYSVIEW_IsStarted() is called 
-  //     too frequently, it can cause overflow in SystemView.
-  while(SEGGER_SYSVIEW_IsStarted()==0){lookBusy(iterationsPerMilliSecond);}
-  SEGGER_SYSVIEW_PrintfHost("Task1: starting\n");
+  //while(SEGGER_SYSVIEW_IsStarted()==0){lookBusy(iterationsPerMilliSecond);}
+  //SEGGER_SYSVIEW_PrintfHost("Task1: starting\n");
 
   // Calculate the number of iterations for lookBusy().
   // For Task1, lookBusy() needs to spin for 1/4 of a ms (processor time).
@@ -98,15 +89,15 @@ void Task1(void *argument)
   while(1)
   {
     // SEGGER_SYSVIEW_PrintfHost is only called every 100 iterations, to prevent SystemView overflow.
-	  iterationCount++;
-	  if ((iterationCount % 100) == 1)
-	  {
-      SEGGER_SYSVIEW_PrintfHost("Task1. Iteration: %u\n", iterationCount);
-	  }
-	  // Simulate useful processing. Spin for 1/4 of a ms (processor time).
-	  lookBusy(lookBusyIterations);
-	  // vTaskDelay causes the task to be delayed for the specified number of SysTicks, i.e., 5
-	  vTaskDelay(5);
+    iterationCount++;
+    if ((iterationCount % 100) == 1)
+    {
+      printf("Task1. Iteration: %lu\n", iterationCount);
+    }
+    // Simulate useful processing. Spin for 1/4 of a ms (processor time).
+    lookBusy(lookBusyIterations);
+    // vTaskDelay causes the task to be delayed for the specified number of SysTicks, i.e., 5
+    vTaskDelay(5);
   }
 }
 
@@ -117,17 +108,17 @@ void Task2( void* argument )
   uint32_t iterationCount = 0;
 
   GreenLed.On();
-  SEGGER_SYSVIEW_PrintfHost("Task2: starting\n");
+  printf("Task2: starting\n");
   // For Task2, lookBusy() needs to spin for 1/2 of a ms (processor time).
   lookBusyIterations = iterationsPerMilliSecond / 2;
 
 
-	while(1)
-	{
+  while(1)
+  {
     iterationCount++;
     if ((iterationCount % 100) == 1)
     {
-      SEGGER_SYSVIEW_PrintfHost("Task2. Iteration: %u\n", iterationCount);
+      printf("Task2. Iteration: %lu\n", iterationCount);
     }
     // Simulate useful processing. Spin for 1/2 of a ms  (processor time).
     lookBusy(lookBusyIterations);
@@ -136,7 +127,7 @@ void Task2( void* argument )
     // * If Task1 is being delayed, then Task2 will resume.
     // * If Task1 is not being delayed, then Task1 will run.
     vTaskDelay(1);
-	}
+  }
 }
 
 
@@ -145,21 +136,19 @@ void Task3( void* argument )
   uint32_t lookBusyIterations;
   uint32_t iterationCount = 0;
 
-  RedLed.On();
-  SEGGER_SYSVIEW_PrintfHost("Task3: starting\n");
+  //RedLed.On();
+  printf("Task3: starting\n");
   // For Task3, lookBusy() needs to spin for 2 ms (processor time).
   lookBusyIterations = iterationsPerMilliSecond * 2;
 
   while(1)
-	{
+  {
     iterationCount++;
     if ((iterationCount % 100) == 1)
     {
-      SEGGER_SYSVIEW_PrintfHost("Task3. Iteration: %u\n", iterationCount);
+      printf("Task3. Iteration: %lu\n", iterationCount);
     }
     // Simulate useful processing. Spin for 2 ms  (processor time).
     lookBusy(lookBusyIterations);
-	}
+  }
 }
-
-

@@ -11,10 +11,11 @@ Licenses:
  */
 
 #include <FreeRTOS.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
-#include <Nucleo_F767ZI_GPIO.h>
 #include <task.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 
 /*
  * This demo uses heap_1 for dynamic memory-allocation.  With heap_1,
@@ -38,6 +39,9 @@ void BlueTask(void *argument);
 int main(void)
 {
 	HWInit();
+
+	// Ensure proper priority grouping for freeRTOS
+	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 
 	// Use retval to track the return value of xTaskCreate, issue asserts along the way
 	// to stop execution if things don't go as planned

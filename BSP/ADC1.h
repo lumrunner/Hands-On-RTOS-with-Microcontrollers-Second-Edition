@@ -1,7 +1,7 @@
 #ifndef ADC1_H_
 #define ADC1_H_
 
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
 
 /**
   * @brief ADC1 Initialization Function

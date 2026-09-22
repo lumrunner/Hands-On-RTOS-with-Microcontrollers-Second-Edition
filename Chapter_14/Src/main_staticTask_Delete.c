@@ -9,13 +9,14 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
+#include <stdlib.h>
 
 #include <FreeRTOS.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
-#include <Nucleo_F767ZI_GPIO.h>
 #include <task.h>
-#include <stdlib.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 
 /**
 * Individual heap implementations are located at: Src\emMang\heap_x.c.
@@ -48,6 +49,9 @@ StaticTask_t GreenTaskTCB;
 int main(void)
 {
 	HWInit();
+
+	// Ensure proper priority grouping for freeRTOS
+	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 
 	TaskHandle_t greenHandle = NULL;
 

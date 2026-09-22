@@ -90,8 +90,8 @@ static void uart4TxDmaSetup( void )
 static void uart4TxDmaStartRepeat( const uint8_t* Msg, uint16_t Len )
 {
 	//clear the transfer complete flag to make sure our transfer starts
-	UART4->ICR |= USART_ICR_TCCF;
-	assert_param(HAL_DMA_Start(&uart4DmaTx, (uint32_t) Msg, (uint32_t)&(UART4->TDR), Len) == HAL_OK);
+	UART4->SR &= ~USART_SR_TC;
+	assert_param(HAL_DMA_Start(&uart4DmaTx, (uint32_t) Msg, (uint32_t)&(UART4->DR), Len) == HAL_OK);
 }
 
 void DMA1_Stream4_IRQHandler(void)

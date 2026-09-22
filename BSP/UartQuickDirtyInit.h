@@ -28,8 +28,8 @@
  extern "C" {
 #endif
 
-#include <stm32f7xx_hal.h>
-void STM_UartInit( USART_TypeDef* STM_UART_PERIPH, uint32_t Baudrate, DMA_HandleTypeDef* DmaTx, DMA_HandleTypeDef* DmaRx );
+#include <stm32f4xx_hal.h>
+HAL_StatusTypeDef STM_UartInit( USART_TypeDef* STM_UART_PERIPH, uint32_t Baudrate, DMA_HandleTypeDef* DmaTx, DMA_HandleTypeDef* DmaRx );
 
 #ifdef __cplusplus
  }

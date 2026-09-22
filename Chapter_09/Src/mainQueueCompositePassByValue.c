@@ -11,11 +11,11 @@ Licenses:
  */
 
 #include <FreeRTOS.h>
-#include <Nucleo_F767ZI_GPIO.h>
 #include <queue.h>
-#include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 
 /*********************************************
  * A simple demonstration of using queues across
@@ -49,7 +49,6 @@ static QueueHandle_t ledCmdQueue = NULL;
 int main(void)
 {
     HWInit();
-    SEGGER_SYSVIEW_Conf();
     HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4); //ensure proper priority grouping for freeRTOS
 
     // Setup tasks, making sure they have been properly created before moving on

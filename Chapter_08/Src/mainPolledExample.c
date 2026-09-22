@@ -9,15 +9,15 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-
+#include <stdio.h>
  
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
-#include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_GPIO.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include <stdint.h>
 
 #define STACK_SIZE 128
@@ -30,7 +30,6 @@ volatile uint32_t flag = 0;
 int main(void)
 {
 	HWInit();
-	SEGGER_SYSVIEW_Conf();
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	// Ensure proper priority grouping for freeRTOS
 
 	// Create TaskA as a higher priority than TaskB.  In this example, this isn't strictly necessary since the tasks
@@ -64,7 +63,7 @@ void GreenTaskA( void* argument )
 		if(++count >= 5)
 		{
 			count = 0;
-			SEGGER_SYSVIEW_PrintfHost("Task A (green LED) sets flag");
+			printf("Task A (green LED) sets flag\r\n");
 			flag = 1;	// Set 'flag' to 1 to "signal" BlueTaskB to run
 		}
 		GreenLed.On();
@@ -81,14 +80,14 @@ void BlueTaskB( void* argument )
 {
 	while(1)
 	{
-	    SEGGER_SYSVIEW_PrintfHost("Task B (Blue LED) starts polling on flag");
+	    printf("Task B (Blue LED) starts polling on flag\r\n");
 
 		// Repeatedly poll on flag.  As soon as it is non-zero,
 		// blink the blue LED 3 times
 	    while(!flag){}
         flag = 0;
 
-		SEGGER_SYSVIEW_PrintfHost("Task B (Blue LED) received flag");
+		printf("Task B (Blue LED) received flag\r\n");
 
 		// Triple blink the Blue LED
 		for(uint_fast8_t i = 0; i < 3; i++)

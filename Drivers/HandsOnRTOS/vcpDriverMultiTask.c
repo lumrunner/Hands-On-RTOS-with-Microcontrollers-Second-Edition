@@ -19,7 +19,7 @@ Licenses:
 #include <semphr.h>
 #include <vcpDriverMultiTask.h>
 #include <stdbool.h>
-#include <Nucleo_F767ZI_GPIO.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include <stdbool.h>
 
 /******************************** NOTE *****************************/
