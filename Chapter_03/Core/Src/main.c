@@ -107,7 +107,7 @@ int main(void)
     // The loop counter is just used for demonstrating debugging
     loopCounter++;
     // write a message to the debugger
-    printf("Starting loop iteration: %u\r\n", loopCounter);
+    printf("Starting loop iteration: %lu\r\n", loopCounter);
 
     // toggle on board led
     BSP_LED_Toggle(LED2);
@@ -115,7 +115,7 @@ int main(void)
     HAL_Delay(1000);
 
     //write another message to debugger
-    printf("Ending loop iteration: %u\r\n", loopCounter);
+    printf("Ending loop iteration: %lu\r\n", loopCounter);
 
 
     /* USER CODE END WHILE */

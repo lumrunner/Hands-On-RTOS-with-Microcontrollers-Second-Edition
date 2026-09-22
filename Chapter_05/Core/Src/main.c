@@ -204,7 +204,7 @@ int main(void)
       {
           debug_timerDoneBeforeSleepCount++;
           if (debug_generateMessages == 1){
-              printf("Iteration: %u,  debug_timerDoneBeforeSleepCount: %u\n",
+              printf("Iteration: %lu,  debug_timerDoneBeforeSleepCount: %lu\n",
                       debug_superLoopIterationCount, debug_timerDoneBeforeSleepCount);
           }
       }
