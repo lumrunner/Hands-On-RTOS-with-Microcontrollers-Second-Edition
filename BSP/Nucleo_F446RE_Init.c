@@ -8,13 +8,14 @@ Licenses:
 
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <FreeRTOS.h>
+#include "SEGGER_SYSVIEW.h"
 #include "Nucleo_F446RE_Init.h"
 #include <Nucleo_F446RE_GPIO.h>
 #include "UartQuickDirtyInit.h"
+
 
 //#define CHANGE_ME 0
 
@@ -213,7 +214,7 @@ void assert_failed(uint8_t *file, uint32_t line)
     BlueLed.On();
     RedLed.On();
     GreenLed.On();
-    printf("assert failed. Line: %lu.  File: %s\r\n", line, file);
+    SEGGER_SYSVIEW_PrintfHost("assert failed. Line: %lu.  File: %s\r\n", line, file);
     while(1);
 }
 #endif // USE_FULL_ASSERT

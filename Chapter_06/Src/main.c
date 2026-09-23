@@ -30,8 +30,6 @@
 #include <Nucleo_F446RE_GPIO.h>
 #include <task.h>
 #include <lookBusy.h>
-
-#include <stdio.h>
 /**
  * 	Function prototypes
  */
