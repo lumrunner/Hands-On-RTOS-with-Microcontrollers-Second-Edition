@@ -13,6 +13,8 @@ Licenses:
 
 #include <FreeRTOS.h>
 #include <task.h>
+#include <SEGGER_SYSVIEW.h>
+
 #include <stm32f4xx_hal.h>
 #include <usbd_cdc_if.h>
 
@@ -34,6 +36,7 @@ int main(void)
 {
     // Initialize hardware and HAL
     HWInit();
+    SEGGER_SYSVIEW_Conf();
 
     // USB initialization
     MX_USB_DEVICE_Init();

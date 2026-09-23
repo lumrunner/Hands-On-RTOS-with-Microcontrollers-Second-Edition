@@ -10,11 +10,12 @@ Licenses:
 
  */
 #include <string.h>
-#include <stdio.h>
 #include <stdbool.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
+#include <SEGGER_SYSVIEW.h>
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -35,6 +36,7 @@ int main(void)
 {
     // Initialize the hardware and HAL
     HWInit();
+    SEGGER_SYSVIEW_Conf();
 
     // Initialize the USB VCP connection, and driver.
     vcpInit();
