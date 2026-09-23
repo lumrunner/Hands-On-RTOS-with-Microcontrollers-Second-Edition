@@ -14,6 +14,8 @@ Licenses:
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
+#include <SEGGER_SYSVIEW.h>
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -39,6 +41,7 @@ QueueHandle_t ledCmdQueue = NULL;
 int main(void)
 {
 	HWInit();
+	SEGGER_SYSVIEW_Conf();
 	PWMInit();
 	vcpInit();
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	// Ensure proper priority grouping for freeRTOS
