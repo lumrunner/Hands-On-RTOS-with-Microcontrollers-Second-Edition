@@ -12,6 +12,8 @@ Licenses:
 
 #include <FreeRTOS.h>
 #include <task.h>
+#include <SEGGER_SYSVIEW.h>
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -38,6 +40,7 @@ static TaskHandle_t recvTaskHandle = NULL;
 int main(void)
 {
 	HWInit();
+	SEGGER_SYSVIEW_Conf();
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	// Ensure proper priority grouping for freeRTOS
 
 	// Setup tasks, making sure they have been properly created before moving on
