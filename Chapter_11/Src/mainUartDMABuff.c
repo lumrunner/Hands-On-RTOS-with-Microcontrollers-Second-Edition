@@ -9,13 +9,13 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-#include <stdio.h>
-
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
 #include <semphr.h>
 #include <timers.h>
+#include <SEGGER_SYSVIEW.h>
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -65,7 +65,7 @@ int main(void)
 {
 	BaseType_t retVal;
 	HWInit();
-
+	SEGGER_SYSVIEW_Conf();
 	// Ensure proper priority-grouping for FreeRTOS
 	NVIC_SetPriorityGrouping(0);
 
@@ -308,9 +308,9 @@ void uartPrintOutTask( void* NotUsed)
 			    // Add a null-terminator to the end of the string (needed by printf)
 			    memoryBuffer[BUFFER_LENGTH - 1] = 0;
 
-			    printf("received: ");
-				printf((char*)memoryBuffer);
-				printf("\n");
+			    SEGGER_SYSVIEW_PrintfHost("received: ");
+			    SEGGER_SYSVIEW_PrintfHost((char*)memoryBuffer);
+			    SEGGER_SYSVIEW_PrintfHost("\n");
 			}
 			else
 			{
@@ -325,7 +325,7 @@ void uartPrintOutTask( void* NotUsed)
             // * So, xSemaphoreTake will timeout 50 times before
             //   UART4 starts sending data.
 	        test_uartPrintOutTask_xSemaphoreTakeTimeout++;
-			printf("timeout\n");
+	        SEGGER_SYSVIEW_PrintfHost("timeout\n");
 		}
 	}
 }

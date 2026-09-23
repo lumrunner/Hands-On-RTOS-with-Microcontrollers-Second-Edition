@@ -9,12 +9,12 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-#include <stdio.h>
-
 #include <FreeRTOS.h>
 #include <task.h>
 #include <stream_buffer.h>
 #include <timers.h>
+#include <SEGGER_SYSVIEW.h>
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -64,7 +64,7 @@ static volatile uint32_t test_uartPrintOutTask_xferNotComplete = 0;
 int main(void)
 {
     HWInit();
-
+    SEGGER_SYSVIEW_Conf();
     // Ensure proper priority grouping for freeRTOS
     NVIC_SetPriorityGrouping(0);
 
@@ -310,9 +310,9 @@ void uartPrintOutTask( void* NotUsed)
             // Add a null-terminator to the end of the string (needed by SEGGER_SYSVIEW_Print)
             rxBufferedData[numBytes] = 0;
 
-            printf("received: ");
-            printf((char*)rxBufferedData);
-            printf("\n");
+            SEGGER_SYSVIEW_PrintfHost("received: %c\n");
+            SEGGER_SYSVIEW_PrintfHost((char*)rxBufferedData);
+            SEGGER_SYSVIEW_PrintfHost("\n");
 
             test_uartPrintOutTask_received++;
             if (numBytes < DMA_BUFFER_LENGTH){
@@ -325,7 +325,7 @@ void uartPrintOutTask( void* NotUsed)
             // * So, xStreamBufferReceive will timeout 50 times before
             //   UART4 starts sending data.
             test_uartPrintOutTask_xStreamBufferReceiveTimeout++;
-            printf("timeout\n");
+            SEGGER_SYSVIEW_PrintfHost("timeout\n");
         }
     }
 }
