@@ -23,7 +23,7 @@
    - See the code-repository's license statement for more information:
      - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
  */
-
+#include "SEGGER_SYSVIEW.h"
 #include <FreeRTOS.h>
 #include <Nucleo_F446RE_Init.h>
 #include <stm32f4xx_hal.h>
@@ -47,7 +47,7 @@ int main(void)
   //   128 * 4 = 512 bytes
   const static uint32_t stackSize = 128;
   HWInit();
-  //SEGGER_SYSVIEW_Conf();
+  SEGGER_SYSVIEW_Conf();
   HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	//ensure proper priority grouping for freeRTOS
 
   // Get the interation-rate for lookBusy()
@@ -77,10 +77,10 @@ void Task1(void *argument)
   uint32_t lookBusyIterations;
   uint32_t iterationCount = 0;
 
-  //BlueLed.On();
+  BlueLed.On();
 
-  //while(SEGGER_SYSVIEW_IsStarted()==0){lookBusy(iterationsPerMilliSecond);}
-  //SEGGER_SYSVIEW_PrintfHost("Task1: starting\n");
+  while(SEGGER_SYSVIEW_IsStarted()==0){lookBusy(iterationsPerMilliSecond);}
+  SEGGER_SYSVIEW_PrintfHost("Task1: starting\n");
 
   // Calculate the number of iterations for lookBusy().
   // For Task1, lookBusy() needs to spin for 1/4 of a ms (processor time).
@@ -92,7 +92,7 @@ void Task1(void *argument)
     iterationCount++;
     if ((iterationCount % 100) == 1)
     {
-      printf("Task1. Iteration: %lu\n", iterationCount);
+    	SEGGER_SYSVIEW_PrintfHost("Task1. Iteration: %lu\n", iterationCount);
     }
     // Simulate useful processing. Spin for 1/4 of a ms (processor time).
     lookBusy(lookBusyIterations);
@@ -108,7 +108,7 @@ void Task2( void* argument )
   uint32_t iterationCount = 0;
 
   GreenLed.On();
-  printf("Task2: starting\n");
+  SEGGER_SYSVIEW_PrintfHost("Task2: starting\n");
   // For Task2, lookBusy() needs to spin for 1/2 of a ms (processor time).
   lookBusyIterations = iterationsPerMilliSecond / 2;
 
@@ -118,7 +118,7 @@ void Task2( void* argument )
     iterationCount++;
     if ((iterationCount % 100) == 1)
     {
-      printf("Task2. Iteration: %lu\n", iterationCount);
+    	SEGGER_SYSVIEW_PrintfHost("Task2. Iteration: %lu\n", iterationCount);
     }
     // Simulate useful processing. Spin for 1/2 of a ms  (processor time).
     lookBusy(lookBusyIterations);
@@ -137,7 +137,7 @@ void Task3( void* argument )
   uint32_t iterationCount = 0;
 
   //RedLed.On();
-  printf("Task3: starting\n");
+  SEGGER_SYSVIEW_PrintfHost("Task3: starting\n");
   // For Task3, lookBusy() needs to spin for 2 ms (processor time).
   lookBusyIterations = iterationsPerMilliSecond * 2;
 
@@ -146,7 +146,7 @@ void Task3( void* argument )
     iterationCount++;
     if ((iterationCount % 100) == 1)
     {
-      printf("Task3. Iteration: %lu\n", iterationCount);
+    	SEGGER_SYSVIEW_PrintfHost("Task3. Iteration: %lu\n", iterationCount);
     }
     // Simulate useful processing. Spin for 2 ms  (processor time).
     lookBusy(lookBusyIterations);

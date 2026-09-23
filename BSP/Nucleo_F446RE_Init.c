@@ -201,20 +201,6 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-// printf over debugger
-int _write(int file, char *ptr, int len)
-{
-  (void)file;
-  int DataIdx;
-
-  for (DataIdx = 0; DataIdx < len; DataIdx++)
-  {
-    //__io_putchar(*ptr++);
-    ITM_SendChar(*ptr++);
-  }
-  return len;
-}
-
 #ifdef  USE_FULL_ASSERT
 /**
  * assert_failed() is a user-defined function.
