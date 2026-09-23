@@ -112,6 +112,7 @@ void uartPrintOutTask( void* NotUsed)
 void USART3_IRQHandler( void )
 {
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+	SEGGER_SYSVIEW_RecordEnterISR();
 	// Clear error flags
 	USART3->SR &= ~(USART_SR_FE |
 					USART_SR_PE |
@@ -130,5 +131,6 @@ void USART3_IRQHandler( void )
 			xQueueSendFromISR(usart3_BytesReceived, &tempVal, &xHigherPriorityTaskWoken);
 		}
 	}
+	SEGGER_SYSVIEW_RecordExitISR();
 	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }

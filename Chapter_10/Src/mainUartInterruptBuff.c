@@ -138,7 +138,7 @@ void uartPrintOutTask( void* NotUsed)
         if(xSemaphoreTake(semOkToPrintOut, 100) == pdPASS)
         {
             semOkToPrintOut_taken++;
-            SEGGER_SYSVIEW_PrintfHost("%17s\r\n", (char*)buffer);
+            SEGGER_SYSVIEW_PrintfHost((char*)buffer);
             // Give semaphore needed to fill the buffer
             xSemaphoreGive(semOkToFill);
         }
@@ -158,6 +158,8 @@ void USART3_IRQHandler( void )
     portBASE_TYPE xHigherPriorityTaskWoken = pdFAIL;
     portBASE_TYPE xHigherPriorityTaskWoken_give = pdFAIL;
     portBASE_TYPE xHigherPriorityTaskWoken_take = pdFAIL;
+
+    SEGGER_SYSVIEW_RecordEnterISR();
 
 	// Clear error flags
     USART3->SR &= ~(USART_SR_FE |
@@ -224,5 +226,6 @@ void USART3_IRQHandler( void )
     else{
         xHigherPriorityTaskWoken = pdFAIL;
     }
+    SEGGER_SYSVIEW_RecordExitISR();
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }

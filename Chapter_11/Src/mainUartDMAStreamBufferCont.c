@@ -348,6 +348,8 @@ void DMA1_Stream1_IRQHandler(void)
     volatile uint8_t* dmaBufferPtr = NULL;
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
+    SEGGER_SYSVIEW_RecordEnterISR();
+
     // DMA high interrupt status register (DMA_HISR)
     // * TCIF[7:4]: stream x transfer-complete interrupt-flag
     if(DMA1->LISR & DMA_LISR_TCIF1)
@@ -388,5 +390,6 @@ void DMA1_Stream1_IRQHandler(void)
         test_DMA1_Stream1_IRQHandler_notExpected++;
     }
 
+    SEGGER_SYSVIEW_RecordExitISR();
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
