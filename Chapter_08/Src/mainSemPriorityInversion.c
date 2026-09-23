@@ -9,11 +9,11 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-#include <stdio.h>
-
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
+#include "SEGGER_SYSVIEW.h"
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -36,6 +36,7 @@ uint32_t iterationsPerMilliSecond;
 int main(void)
 {
     HWInit();
+    SEGGER_SYSVIEW_Conf();
     HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4); //ensure proper priority grouping for freeRTOS
 
     // Get the iteration-rate for lookBusy()
@@ -79,14 +80,14 @@ void TaskA( void* argument )
     {
 
         // 'take' the semaphore with a 200ms timeout
-        printf("attempt to take semPtr\r\n");
+    	SEGGER_SYSVIEW_PrintfHost("attempt to take semPtr\r\n");
         if(xSemaphoreTake(semPtr, 200/portTICK_PERIOD_MS) == pdPASS)
         {
             RedLed.Off();
             receivedCounter++;
             // In calling printf, the space between the %lu and the closing
             // quote appears to be a necessary work-around for a bug in the API.
-            printf("received semPtr: %lu \r\n", receivedCounter);
+            SEGGER_SYSVIEW_PrintfHost("received semPtr: %lu \r\n", receivedCounter);
             blinkTwice(&GreenLed);
             xSemaphoreGive(semPtr);
         }
@@ -94,7 +95,7 @@ void TaskA( void* argument )
         {
             // This code is called when the semaphore wasn't taken in time
             timedoutCounter++;
-            printf("FAILED to receive semPtr in time: %lu \r\n", timedoutCounter);
+            SEGGER_SYSVIEW_PrintfHost("FAILED to receive semPtr in time: %lu \r\n", timedoutCounter);
             RedLed.On();
         }
         // Wait for a bit to let other tasks run
@@ -115,7 +116,7 @@ void TaskB( void* argument )
     while(1)
     {
         counter++;
-        printf("starting iteration %lu ", counter);
+        SEGGER_SYSVIEW_PrintfHost("starting iteration %lu ", counter);
         vTaskDelay(StmRand(10,25));
 
         // Each for-loop iteration takes 1 ms of processing time.
@@ -141,12 +142,12 @@ void TaskC( void* argument )
     while(1)
     {
         // 'take' the semaphore with a 200mS timeout
-        printf("attempt to take semPtr\r\n");
+    	SEGGER_SYSVIEW_PrintfHost("attempt to take semPtr\r\n");
         if(xSemaphoreTake(semPtr, 200/portTICK_PERIOD_MS) == pdPASS)
         {
             RedLed.Off();
             receivedCounter++;
-            printf("received semPtr: %lu \r\n", receivedCounter);
+            SEGGER_SYSVIEW_PrintfHost("received semPtr: %lu \r\n", receivedCounter);
             blinkTwice(&BlueLed);
             xSemaphoreGive(semPtr);
         }
@@ -154,7 +155,7 @@ void TaskC( void* argument )
         {
             // This code is called when the semaphore wasn't taken in time
             timedoutCounter++;
-            printf("FAILED to receive semPtr in time: %lu \r\n", timedoutCounter);
+            SEGGER_SYSVIEW_PrintfHost("FAILED to receive semPtr in time: %lu \r\n", timedoutCounter);
             RedLed.On();
         }
     }

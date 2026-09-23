@@ -9,11 +9,11 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-#include <stdio.h>
-
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
+#include "SEGGER_SYSVIEW.h"
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -33,6 +33,7 @@ SemaphoreHandle_t semPtr = NULL;
 int main(void)
 {
 	HWInit();
+	SEGGER_SYSVIEW_Conf();
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	// Ensure proper priority grouping for freeRTOS
 
 	// Create a semaphore using the FreeRTOS Heap
@@ -74,7 +75,7 @@ void GreenTaskA( void* argument )
 		if(++count >= numLoops)
 		{
 			count = 0;
-			printf("Task A (green LED) gives semPtr\r\n");
+			SEGGER_SYSVIEW_PrintfHost("Task A (green LED) gives semPtr\r\n");
 			xSemaphoreGive(semPtr);
 		}
 		greenBlink();
@@ -91,17 +92,17 @@ void TaskB( void* argument )
 	while(1)
 	{
 		// 'take' the semaphore with a 500mS timeout
-		printf("attempt to take semPtr\r\n");
+		SEGGER_SYSVIEW_PrintfHost("attempt to take semPtr\r\n");
 		if(xSemaphoreTake(semPtr, 500/portTICK_PERIOD_MS) == pdPASS)
 		{
 			RedLed.Off();
-			printf("received semPtr\r\n");
+			SEGGER_SYSVIEW_PrintfHost("received semPtr\r\n");
 			blueTripleBlink();
 		}
 		else
 		{
 			// This code is run when the semaphore wasn't taken in time
-			printf("FAILED to receive semPtr in time\r\n");
+			SEGGER_SYSVIEW_PrintfHost("FAILED to receive semPtr in time\r\n");
 			RedLed.On();
 		}
 	}
