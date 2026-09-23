@@ -12,6 +12,8 @@ Licenses:
 
 #include <FreeRTOS.h>
 #include <task.h>
+#include <SEGGER_SYSVIEW.h>
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -39,7 +41,7 @@ void BlueTask(void *argument);
 int main(void)
 {
 	HWInit();
-
+	SEGGER_SYSVIEW_Conf();
 	// Ensure proper priority grouping for freeRTOS
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 

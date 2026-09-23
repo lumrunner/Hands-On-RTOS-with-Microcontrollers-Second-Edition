@@ -12,6 +12,8 @@ Licenses:
 
 #include <FreeRTOS.h>
 #include <queue.h>
+#include <SEGGER_SYSVIEW.h>
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -82,7 +84,7 @@ static uint8_t queueStorage[LED_CMD_QUEUE_LEN];
 int main(void)
 {
 	HWInit();
-
+	SEGGER_SYSVIEW_Conf();
 	// Ensure proper priority grouping for freeRTOS
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 	BaseType_t retVal;
