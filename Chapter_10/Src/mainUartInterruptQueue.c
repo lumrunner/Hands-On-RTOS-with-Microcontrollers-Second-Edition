@@ -9,13 +9,13 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-#include <stdio.h>
-
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
 #include <semphr.h>
 #include <timers.h>
+#include <SEGGER_SYSVIEW.h>
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -45,7 +45,7 @@ static volatile bool rxInProgress = false;
 int main(void)
 {
 	HWInit();
-
+	SEGGER_SYSVIEW_Conf();
 	HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4); //ensure proper priority grouping for freeRTOS
 
 	// Setup a timer to kick off UART traffic (flowing out of UART4 TX line
@@ -105,7 +105,7 @@ void uartPrintOutTask( void* NotUsed)
 	{
 		xQueueReceive(usart3_BytesReceived, &nextByte, portMAX_DELAY);
 		// In "%c ", the space is a workaround for an apparent bug in SystemView.
-		printf("%c\n", nextByte);
+		SEGGER_SYSVIEW_PrintfHost("%c\n", nextByte);
 	}
 }
 

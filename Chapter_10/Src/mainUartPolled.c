@@ -9,11 +9,11 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-#include <stdio.h>
-
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
+#include <SEGGER_SYSVIEW.h>
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -41,7 +41,7 @@ uint32_t iterationsPerMilliSecond;
 int main(void)
 {
     HWInit();
-
+    SEGGER_SYSVIEW_Conf();
     // Start UART4, and have it continuously send data.
     // UART4 continuously sends the string "data from uart4", including the null-terminator.
     SetupUart4ExternalSim(BAUDRATE);
@@ -93,7 +93,7 @@ void uartPrintOutTask( void* NotUsed)
         xQueueReceive(uart3_BytesReceived, &nextByte, portMAX_DELAY);
 
         // newline necessary for characters to be displayed
-        printf("%c\n", nextByte);
+        SEGGER_SYSVIEW_PrintfHost("%c\n", nextByte);
     }
 }
 

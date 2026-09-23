@@ -9,13 +9,13 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-#include <stdio.h>
-
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
 #include <semphr.h>
 #include <timers.h>
+#include <SEGGER_SYSVIEW.h>
+
 #include <stm32f4xx_hal.h>
 
 #include <Nucleo_F446RE_Init.h>
@@ -61,7 +61,7 @@ static volatile uint32_t semOkToPrintOut_notTaken = 0;
 int main(void)
 {
     HWInit();
-
+    SEGGER_SYSVIEW_Conf();
     // Ensure proper priority grouping for FreeRTOS
     NVIC_SetPriorityGrouping(0);
 
@@ -138,13 +138,13 @@ void uartPrintOutTask( void* NotUsed)
         if(xSemaphoreTake(semOkToPrintOut, 100) == pdPASS)
         {
             semOkToPrintOut_taken++;
-            printf("%17s\r\n", (char*)buffer);
+            SEGGER_SYSVIEW_PrintfHost("%17s\r\n", (char*)buffer);
             // Give semaphore needed to fill the buffer
             xSemaphoreGive(semOkToFill);
         }
         else
         {
-            printf("timeout\r\n");
+        	SEGGER_SYSVIEW_PrintfHost("timeout\r\n");
             // Record diagnostic data, for testing and debugging
             if (semOkToPrintOut_taken != 0)
                 semOkToPrintOut_notTaken++;
