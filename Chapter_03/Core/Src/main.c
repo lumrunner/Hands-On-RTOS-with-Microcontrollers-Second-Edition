@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stdio.h"
+#include "SEGGER_SYSVIEW.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,6 +92,8 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
 
+  SEGGER_SYSVIEW_Conf();
+
   /* USER CODE END 2 */
 
   /* Initialize leds */
@@ -107,7 +109,7 @@ int main(void)
     // The loop counter is just used for demonstrating debugging
     loopCounter++;
     // write a message to the debugger
-    printf("Starting loop iteration: %lu\r\n", loopCounter);
+    SEGGER_SYSVIEW_PrintfHost("Starting loop iteration: %lu", loopCounter);
 
     // toggle on board led
     BSP_LED_Toggle(LED2);
@@ -115,7 +117,7 @@ int main(void)
     HAL_Delay(1000);
 
     //write another message to debugger
-    printf("Ending loop iteration: %lu\r\n", loopCounter);
+    SEGGER_SYSVIEW_PrintfHost("Ending loop iteration: %lu", loopCounter);
 
 
     /* USER CODE END WHILE */
@@ -210,18 +212,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-int _write(int file, char *ptr, int len)
-{
-  (void)file;
-  int DataIdx;
 
-  for (DataIdx = 0; DataIdx < len; DataIdx++)
-  {
-    //__io_putchar(*ptr++);
-    ITM_SendChar(*ptr++);
-  }
-  return len;
-}
 /* USER CODE END 4 */
 
 /**

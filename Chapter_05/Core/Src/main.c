@@ -30,9 +30,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
-// stdio is used for printf
-#include "stdio.h"
+#include "SEGGER_SYSVIEW.h"
 
 // stdlib is needed for pseudo random number generator
 #include "stdlib.h"
@@ -127,6 +125,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
+  SEGGER_SYSVIEW_Conf();
 
     // Keep the debugger active, during and after sleep mode
     HAL_DBGMCU_EnableDBGSleepMode();
@@ -143,7 +142,7 @@ int main(void)
 
     // If debug messages will be generated, wait for the user to start SystemView Recorder
     if (debug_generateMessages == 1){
-        printf("Super-loop starting...\n");
+    	SEGGER_SYSVIEW_PrintfHost("Super-loop starting...\n");
     }
     // Synchronize the super-loop's first iteration with the SysTick timer's period
     // Spin until the SysTick ISR runs
@@ -204,7 +203,7 @@ int main(void)
       {
           debug_timerDoneBeforeSleepCount++;
           if (debug_generateMessages == 1){
-              printf("Iteration: %lu,  debug_timerDoneBeforeSleepCount: %lu\n",
+        	  SEGGER_SYSVIEW_PrintfHost("Iteration: %lu,  debug_timerDoneBeforeSleepCount: %lu\n",
                       debug_superLoopIterationCount, debug_timerDoneBeforeSleepCount);
           }
       }
@@ -326,18 +325,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-int _write(int file, char *ptr, int len)
-{
-  (void)file;
-  int DataIdx;
 
-  for (DataIdx = 0; DataIdx < len; DataIdx++)
-  {
-    //__io_putchar(*ptr++);
-    ITM_SendChar(*ptr++);
-  }
-  return len;
-}
 /*
  Function:  getRandomNumberInRange()
 
