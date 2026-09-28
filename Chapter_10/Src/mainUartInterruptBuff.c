@@ -9,16 +9,17 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
 #include <semphr.h>
 #include <timers.h>
-#include <Nucleo_F767ZI_GPIO.h>
 #include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include <UartQuickDirtyInit.h>
 #include "Uart4Setup.h"
 #include <stdbool.h>
@@ -39,7 +40,7 @@ void startUart4Traffic( TimerHandle_t xTimer );
 static SemaphoreHandle_t semOkToFill = NULL;
 static SemaphoreHandle_t semOkToPrintOut = NULL;
 
-// Indicates USART2 is enabled to receive
+// Indicates USART3 is enabled to receive
 static volatile bool rxInProgress = false;
 
 // * The shared buffer
@@ -61,12 +62,11 @@ int main(void)
 {
     HWInit();
     SEGGER_SYSVIEW_Conf();
-
     // Ensure proper priority grouping for FreeRTOS
     NVIC_SetPriorityGrouping(0);
 
     // Setup a timer to kick off UART traffic (flowing out of UART4 TX line
-    // and into USART2 RX line) 5 seconds after the scheduler starts.
+    // and into USART3 RX line) 5 seconds after the scheduler starts.
     // The transmission needs to start after the receiver is ready for data.
     TimerHandle_t oneShotHandle =
     xTimerCreate(   "startUart4Traffic",
@@ -107,11 +107,11 @@ int main(void)
 void startReceiveInt()
 {
     rxInProgress = true;
-    USART2->CR3 |= USART_CR3_EIE;   //enable error interrupts
-    USART2->CR1 |= (USART_CR1_UE | USART_CR1_RXNEIE);
-    //all 4 bits are for preemption priority -
-    NVIC_SetPriority(USART2_IRQn, 6);
-    NVIC_EnableIRQ(USART2_IRQn);
+	USART3->CR3 |= USART_CR3_EIE;	//enable error interrupts
+	USART3->CR1 |= (USART_CR1_UE | USART_CR1_RXNEIE);
+	//all 4 bits are for preemption priority -
+	NVIC_SetPriority(USART3_IRQn, 5);
+	NVIC_EnableIRQ(USART3_IRQn);
 }
 
 void startUart4Traffic( TimerHandle_t xTimer )
@@ -123,9 +123,9 @@ void startUart4Traffic( TimerHandle_t xTimer )
 void uartPrintOutTask( void* NotUsed)
 {
 
-    // Initialize USART2
-    STM_UartInit(USART2, BAUDRATE, NULL, NULL);
-    // Enable USART2
+    // Initialize USART3
+    STM_UartInit(USART3, BAUDRATE, NULL, NULL);
+    // Enable USART3
     startReceiveInt();
 
     // Allow the interrupt-handler to fill the buffer
@@ -138,13 +138,13 @@ void uartPrintOutTask( void* NotUsed)
         if(xSemaphoreTake(semOkToPrintOut, 100) == pdPASS)
         {
             semOkToPrintOut_taken++;
-            SEGGER_SYSVIEW_Print((char*)buffer);
+            SEGGER_SYSVIEW_PrintfHost((char*)buffer);
             // Give semaphore needed to fill the buffer
             xSemaphoreGive(semOkToFill);
         }
         else
         {
-            SEGGER_SYSVIEW_PrintfHost("timeout");
+        	SEGGER_SYSVIEW_PrintfHost("timeout\r\n");
             // Record diagnostic data, for testing and debugging
             if (semOkToPrintOut_taken != 0)
                 semOkToPrintOut_notTaken++;
@@ -153,7 +153,7 @@ void uartPrintOutTask( void* NotUsed)
 }
 
 
-void USART2_IRQHandler( void )
+void USART3_IRQHandler( void )
 {
     portBASE_TYPE xHigherPriorityTaskWoken = pdFAIL;
     portBASE_TYPE xHigherPriorityTaskWoken_give = pdFAIL;
@@ -161,25 +161,18 @@ void USART2_IRQHandler( void )
 
     SEGGER_SYSVIEW_RecordEnterISR();
 
-    // First check for errors
-    if( USART2->ISR & ( USART_ISR_ORE_Msk |
-                        USART_ISR_NE_Msk |
-                        USART_ISR_FE_Msk |
-                        USART_ISR_PE_Msk ))
-    {
-        // Clear error flags
-        USART2->ICR |= (USART_ICR_FECF |
-                        USART_ICR_PECF |
-                        USART_ICR_NCF |
-                        USART_ICR_ORECF);
-    }
+	// Clear error flags
+    USART3->SR &= ~(USART_SR_FE |
+					USART_SR_PE |
+					USART_SR_NE |
+					USART_SR_ORE);
 
-    if( USART2->ISR & USART_ISR_RXNE_Msk)
+    if( USART3->SR & USART_SR_RXNE_Msk)
     {
         // Read the data register unconditionally to clear
         // the receive-not-empty interrupt if no reception is
         // in progress
-        uint8_t tempVal = (uint8_t) USART2->RDR;
+        uint8_t tempVal = (uint8_t) USART3->DR;
 
         if(rxInProgress)
         {
@@ -233,6 +226,6 @@ void USART2_IRQHandler( void )
     else{
         xHigherPriorityTaskWoken = pdFAIL;
     }
-    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     SEGGER_SYSVIEW_RecordExitISR();
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }

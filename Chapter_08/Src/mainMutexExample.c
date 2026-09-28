@@ -9,14 +9,15 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
-
 #include <FreeRTOS.h>
 #include <task.h>
 #include <semphr.h>
-#include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_GPIO.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
+#include "SEGGER_SYSVIEW.h"
+
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include <lookBusy.h>
 
 #define STACK_SIZE 128
@@ -76,14 +77,14 @@ void TaskA( void* argument )
     while(1)
     {
         // 'take' the mutex with a 200mS timeout
-        SEGGER_SYSVIEW_PrintfHost("attempt to take mutex");
+    	SEGGER_SYSVIEW_PrintfHost("attempt to take mutex\r\n");
         if(xSemaphoreTake(mutexPtr, 200/portTICK_PERIOD_MS) == pdPASS)
         {
             RedLed.Off();
             receivedCounter++;
-            // In calling SEGGER_SYSVIEW_PrintfHost, the space between the %u and the closing
+            // In calling printf, the space between the %lu and the closing
             // quote appears to be a necessary work-around for a bug in the API.
-            SEGGER_SYSVIEW_PrintfHost("received mutexPtr: %u ", receivedCounter);
+            SEGGER_SYSVIEW_PrintfHost("received mutexPtr: %lu \r\n", receivedCounter);
             blinkTwice(&GreenLed);
             xSemaphoreGive(mutexPtr);
         }
@@ -91,7 +92,7 @@ void TaskA( void* argument )
         {
             // This code is called when the mutex wasn't taken in time
             timedoutCounter++;
-            SEGGER_SYSVIEW_PrintfHost("FAILED to take mutex in time: %u ", timedoutCounter);
+            SEGGER_SYSVIEW_PrintfHost("FAILED to take mutex in time: %lu \r\n", timedoutCounter);
             RedLed.On();
         }
         // Sleep for a bit to let other tasks run
@@ -112,7 +113,7 @@ void TaskB( void* argument )
     while(1)
     {
         counter++;
-        SEGGER_SYSVIEW_PrintfHost("starting iteration %u ", counter);
+        SEGGER_SYSVIEW_PrintfHost("starting iteration %lu \r\n", counter);
         vTaskDelay(StmRand(10,25));
 
         // Each for-loop iteration takes 1 ms of processing time.
@@ -138,12 +139,12 @@ void TaskC( void* argument )
     while(1)
     {
         // 'take' the mutex with a 200mS timeout
-        SEGGER_SYSVIEW_PrintfHost("attempt to take mutex");
+    	SEGGER_SYSVIEW_PrintfHost("attempt to take mutex\r\n");
         if(xSemaphoreTake(mutexPtr, 200/portTICK_PERIOD_MS) == pdPASS)
         {
             RedLed.Off();
             receivedCounter++;
-            SEGGER_SYSVIEW_PrintfHost("mutex taken: %u ", receivedCounter);
+            SEGGER_SYSVIEW_PrintfHost("mutex taken: %lu \r\n", receivedCounter);
             blinkTwice(&BlueLed);
             xSemaphoreGive(mutexPtr);
         }
@@ -151,7 +152,7 @@ void TaskC( void* argument )
         {
             // This code is called when the mutex wasn't taken in time
             timedoutCounter++;
-            SEGGER_SYSVIEW_PrintfHost("FAILED to take mutex in time: %u ", timedoutCounter);
+            SEGGER_SYSVIEW_PrintfHost("FAILED to take mutex in time: %lu \r\n", timedoutCounter);
             RedLed.On();
         }
     }

@@ -9,16 +9,18 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
+#include <string.h>
+#include <stdbool.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
-#include <Nucleo_F767ZI_GPIO.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
-#include <string.h>
-#include <stdio.h>
+#include <SEGGER_SYSVIEW.h>
+
+#include <stm32f4xx_hal.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include <vcpDriverMultiTask.h>
-#include <stdbool.h>
 #include <unsignedToAscii.h>
 
 
@@ -34,6 +36,7 @@ int main(void)
 {
     // Initialize the hardware and HAL
     HWInit();
+    SEGGER_SYSVIEW_Conf();
 
     // Initialize the USB VCP connection, and driver.
     vcpInit();

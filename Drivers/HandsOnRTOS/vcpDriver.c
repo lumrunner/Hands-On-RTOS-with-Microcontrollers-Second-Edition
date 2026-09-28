@@ -17,7 +17,6 @@ Licenses:
 #include <stream_buffer.h>
 #include <task.h>
 #include <semphr.h>
-#include <SEGGER_SYSVIEW.h>
 #include <vcpDriver.h>
 #include <stdbool.h>
 

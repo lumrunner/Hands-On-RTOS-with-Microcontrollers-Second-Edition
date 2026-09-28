@@ -20,7 +20,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-
+#include "Nucleo_F446RE_Init.h"
 #include "usb_device.h"
 #include "usbd_core.h"
 #include "usbd_desc.h"

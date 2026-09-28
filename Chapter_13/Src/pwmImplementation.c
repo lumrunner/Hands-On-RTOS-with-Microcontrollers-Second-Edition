@@ -1,6 +1,6 @@
 #include <pwmImplementation.h>
-#include <main.h>
-#include <stm32f7xx_hal.h>
+#include <Nucleo_F446RE_GPIO.h>
+#include <stm32f4xx_hal.h>
 
 /**
  * PWM implementation supplies implementations of iPWM for the red, green, and blue
@@ -13,9 +13,9 @@
  * per channel : 0 - 65535 (0-100%)
  *
  * Color	Pin		Timer		Alt Func	main.h
- * Red		PB14	TIM12CH1 	AF9			LD3_Pin
- * Green	PB0		TIM3CH3		AF2			LD1_Pin
- * Blue		PB7		TIM4CH2		AF2			LD2_Pin
+ * Red		PA7		TIM14CH1 	AF9			LD3_Pin
+ * Green	PA5		TIM2CH1		AF2			LD1_Pin
+ * Blue		PA6		TIM3CH1		AF2			LD2_Pin
  */
 void PWMInit( void )
 {
@@ -26,9 +26,9 @@ void PWMInit( void )
 	TIM_OC_InitTypeDef sConfig;
 
 	//first, initialize all of the relevant timer clocks
-	__HAL_RCC_TIM12_CLK_ENABLE();
+	__HAL_RCC_TIM14_CLK_ENABLE();
+	__HAL_RCC_TIM2_CLK_ENABLE();
 	__HAL_RCC_TIM3_CLK_ENABLE();
-	__HAL_RCC_TIM4_CLK_ENABLE();
 
 	//init prescalar value for the counter to run at 216 Mhz
 	uint32_t uhPrescalerValue = (uint32_t)((SystemCoreClock/2) / 21600000) - 1;
@@ -47,7 +47,7 @@ void PWMInit( void )
 	sConfig.OCIdleState  = TIM_OCIDLESTATE_RESET;
 
 	//green LED timer configuration
-	TimHandle.Instance = TIM3;
+	TimHandle.Instance = TIM2;
 	assert_param(HAL_TIM_PWM_Init(&TimHandle) == HAL_OK);
 	assert_param(HAL_TIM_PWM_ConfigChannel(&TimHandle, &sConfig, TIM_CHANNEL_3) == HAL_OK);
 	assert_param(HAL_TIM_PWM_Start(&TimHandle, TIM_CHANNEL_3) == HAL_OK);
@@ -64,10 +64,6 @@ void PWMInit( void )
 	assert_param(HAL_TIM_PWM_ConfigChannel(&TimHandle, &sConfig, TIM_CHANNEL_1) == HAL_OK);
 	assert_param(HAL_TIM_PWM_Start(&TimHandle, TIM_CHANNEL_1) == HAL_OK);
 
-	// initialize all GPIO lines and map alternate functions
-	// so the timer channels are output to the GPIO pins
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-
 	// common GPIO settings PB14, PB0, PB7
 	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -76,20 +72,20 @@ void PWMInit( void )
 	//assign AF2_TIM3 LD1_Pin
 	//Green LED is TIM3CH3
 	GPIO_InitStruct.Pin = LD1_Pin;
-	GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	GPIO_InitStruct.Alternate = GPIO_AF1_TIM2;
+	HAL_GPIO_Init(LD_GPIO_Port, &GPIO_InitStruct);
 
 	//assign AF2_TIM4 LD2_Pin
 	//Blue LED is TIM3CH3
 	GPIO_InitStruct.Pin = LD2_Pin;
-	GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
+	HAL_GPIO_Init(LD_GPIO_Port, &GPIO_InitStruct);
 
 	//assign AF9_TIM12 LD3_Pin
 	//Red LED is TIM12CH1
 	GPIO_InitStruct.Pin = LD3_Pin;
-	GPIO_InitStruct.Alternate = GPIO_AF9_TIM12;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	GPIO_InitStruct.Alternate = GPIO_AF9_TIM14;
+	HAL_GPIO_Init(LD_GPIO_Port, &GPIO_InitStruct);
 }
 
 void SetBlueDuty( float DutyCycle )

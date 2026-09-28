@@ -9,16 +9,18 @@ Licenses:
   - https://github.com/PacktPublishing/Hands-On-RTOS-with-Microcontrollers-Second-Edition
 
  */
+#include <string.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
-#include <Nucleo_F767ZI_GPIO.h>
 #include <SEGGER_SYSVIEW.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
-#include <usb_device.h>
+
+#include <stm32f4xx_hal.h>
 #include <usbd_cdc_if.h>
-#include <string.h>
+
+#include <Nucleo_F446RE_Init.h>
+#include <Nucleo_F446RE_GPIO.h>
+#include <usb_device.h>
 #include <unsignedToAscii.h>
 
 /*********************************************
@@ -34,6 +36,7 @@ int main(void)
 {
     // Initialize hardware and HAL
     HWInit();
+    SEGGER_SYSVIEW_Conf();
 
     // USB initialization
     MX_USB_DEVICE_Init();

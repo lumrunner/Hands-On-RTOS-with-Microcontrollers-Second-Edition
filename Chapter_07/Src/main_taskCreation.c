@@ -16,12 +16,13 @@ Licenses:
  */
 
 #include <FreeRTOS.h>
-#include <Nucleo_F767ZI_Init.h>
-#include <stm32f7xx_hal.h>
-#include <Nucleo_F767ZI_GPIO.h>
+#include <Nucleo_F446RE_Init.h>
+#include <stm32f4xx_hal.h>
+#include <Nucleo_F446RE_GPIO.h>
 #include <task.h>
-#include <SEGGER_SYSVIEW.h>
 #include <lookBusy.h>
+
+#include "SEGGER_SYSVIEW.h"
 
 /**
  * 	Function prototypes
@@ -49,7 +50,7 @@ int main(void)
 {
     HWInit();
     SEGGER_SYSVIEW_Conf();
-
+    HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);	//ensure proper priority grouping for freeRTOS
 
     // Get the interation-rate for lookBusy()
     iterationsPerMilliSecond = lookBusyIterationRate();
@@ -84,13 +85,13 @@ void GreenTask(void *argument)
     }
     BlueLed.Off();
 
-    SEGGER_SYSVIEW_PrintfHost("GreenTask started");
+    SEGGER_SYSVIEW_PrintfHost("GreenTask started\r\n");
 
     GreenLed.On();
     vTaskDelay(1500 / portTICK_PERIOD_MS);
     GreenLed.Off();
 
-    SEGGER_SYSVIEW_PrintfHost("GreenTask is deleting itself");
+    SEGGER_SYSVIEW_PrintfHost("GreenTask is deleting itself\r\n");
     // A task can delete itself by passing NULL to vTaskDelete
     vTaskDelete(NULL);
 
@@ -102,7 +103,7 @@ void BlueTask( void* argument )
 {
     while(1)
     {
-        SEGGER_SYSVIEW_PrintfHost("BlueTask is starting a loop iteration");
+    	SEGGER_SYSVIEW_PrintfHost("BlueTask is starting a loop iteration\r\n");
         BlueLed.On();
         vTaskDelay(200 / portTICK_PERIOD_MS);
         BlueLed.Off();
@@ -117,13 +118,13 @@ void RedTask( void* argument )
 
     while(1)
     {
-        SEGGER_SYSVIEW_PrintfHost("RedTask is starting a loop iteration");
+    	SEGGER_SYSVIEW_PrintfHost("RedTask is starting a loop iteration\r\n");
         // Spin for 1 second of processor time
         for (i=0;i<1000;i++){
             lookBusy(iterationsPerMilliSecond);
         }
 
-        SEGGER_SYSVIEW_PrintfHost("RedTask is turning-on the red LED");
+        SEGGER_SYSVIEW_PrintfHost("RedTask is turning-on the red LED\r\n");
         RedLed.On();
         vTaskDelay(500/ portTICK_PERIOD_MS);
         RedLed.Off();
@@ -131,7 +132,7 @@ void RedTask( void* argument )
 
         if(firstIteration == 1)
         {
-            SEGGER_SYSVIEW_PrintfHost("RedTask is deleting BlueTask");
+        	SEGGER_SYSVIEW_PrintfHost("RedTask is deleting BlueTask\r\n");
             // Tasks can delete one-another by passing the desired TaskHandle_t to vTaskDelete
             vTaskDelete(blueTaskHandle);
             firstIteration = 0;
